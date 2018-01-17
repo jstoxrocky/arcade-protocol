@@ -10,7 +10,7 @@ from web3.utils.transactions import (
 from solc import (
     compile_files,
 )
-from contract_tester import (
+from zero_x_2048_contracts import (
     CONTRACTS_DIR,
 )
 

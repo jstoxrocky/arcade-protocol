@@ -2,10 +2,10 @@ import pytest
 from web3.utils.transactions import (
     wait_for_transaction_receipt,
 )
-from ethereum.tester import (
+from eth_tester.exceptions import (
     TransactionFailed,
 )
-from eth0x2048.sign import (
+from zero_x_2048_contracts import (
     hash_data,
     sign,
 )
