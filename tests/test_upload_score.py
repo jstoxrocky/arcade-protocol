@@ -5,7 +5,7 @@ from web3.utils.transactions import (
 from eth_tester.exceptions import (
     TransactionFailed,
 )
-from zero_x_2048_contracts import (
+from contracts import (
     hash_data,
     sign,
 )
@@ -26,7 +26,7 @@ def upload_score(web3, contract, user, signed, score):
     txn_receipt = wait_for_transaction_receipt(web3, txhash)
     assert txn_receipt is not None
     tx = web3.eth.getTransaction(txhash)
-    gas_cost = tx['gasPrice']*txn_receipt['gasUsed']
+    gas_cost = tx['gasPrice'] * txn_receipt['gasUsed']
     return gas_cost
 
 

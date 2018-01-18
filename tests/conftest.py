@@ -10,7 +10,7 @@ from web3.utils.transactions import (
 from solc import (
     compile_files,
 )
-from zero_x_2048_contracts import (
+from contracts import (
     CONTRACTS_DIR,
 )
 
@@ -20,7 +20,7 @@ def compile(filepath, contract_name, allow_paths=None):
         [filepath],
         allow_paths=allow_paths,
     )
-    compilation = compilation[filepath+":"+contract_name]
+    compilation = compilation[filepath + ":" + contract_name]
     abi = json.dumps(compilation['abi'])
     bytecode = compilation['bin']
     bytecode_runtime = compilation['bin-runtime']

@@ -11,11 +11,12 @@ from eth_utils import (
 _inner_file = os.path.dirname(__file__)
 _outer_dir_rel = os.path.join(_inner_file, '..')
 _outer_dir_abs = os.path.abspath(_outer_dir_rel)
-CONTRACTS_DIR = os.path.join(_outer_dir_abs, 'contracts')
+_solidity_dir = os.path.join(_outer_dir_abs, 'solidity')
+CONTRACTS_DIR = os.path.join(_solidity_dir, 'contracts')
 
 
 def int_to_uint(value, uint=256):
-    return pad_left(int_to_big_endian(value), int(2*(uint**0.5)), '\x00')
+    return pad_left(int_to_big_endian(value), int(2 * (uint**0.5)), '\x00')
 
 
 def hex_to_address(value):

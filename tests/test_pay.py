@@ -12,7 +12,7 @@ def pay(web3, contract, user, price):
     txn_receipt = wait_for_transaction_receipt(web3, txhash)
     assert txn_receipt is not None
     tx = web3.eth.getTransaction(txhash)
-    gas_cost = tx['gasPrice']*txn_receipt['gasUsed']
+    gas_cost = tx['gasPrice'] * txn_receipt['gasUsed']
     return gas_cost
 
 
@@ -21,7 +21,7 @@ def test_jackpot(web3, contract, user):
     initial_value = contract.jackpot()
     price = contract.price()
     percent_fee = contract.percentFee()
-    to_jackpot = int(price*(1 - (percent_fee/100)))
+    to_jackpot = int(price * (1 - (percent_fee / 100)))
     expected_output = initial_value + to_jackpot
 
     # Generate actual output
@@ -62,7 +62,7 @@ def test_owner_balance(web3, contract, owner, user):
     # Formulate expected output
     price = contract.price()
     percent_fee = contract.percentFee()
-    to_owner = int(price*(percent_fee/100))
+    to_owner = int(price * (percent_fee / 100))
     expected_ouput = web3.eth.getBalance(owner) + to_owner
     # Generate actual output
     pay(web3, contract, user, price)
@@ -75,7 +75,7 @@ def test_contract_balance(web3, contract, user):
     # Formulate expected output
     price = contract.price()
     percent_fee = contract.percentFee()
-    to_jackpot = int(price*(1 - (percent_fee/100)))
+    to_jackpot = int(price * (1 - (percent_fee / 100)))
     expected_ouput = web3.eth.getBalance(contract.address) + to_jackpot
 
     # Generate actual output
