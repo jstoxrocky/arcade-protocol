@@ -1,10 +1,10 @@
 import os
-import web3
-from eth_utils import (
-    keccak,
-    decode_hex,
-    int_to_big_endian,
-    pad_left,
+from web3 import (
+    Web3,
+    Account,
+)
+from toolz.dicttoolz import (
+    valmap,
 )
 
 
@@ -15,30 +15,9 @@ _solidity_dir = os.path.join(_outer_dir_abs, 'solidity')
 CONTRACTS_DIR = os.path.join(_solidity_dir, 'contracts')
 
 
-def int_to_uint(value, uint=256):
-    return pad_left(int_to_big_endian(value), int(2 * (uint**0.5)), '\x00')
-
-
-def hex_to_address(value):
-    return decode_hex(value)
-
-
-def hash_data(contract, user, value):
-    _contract = hex_to_address(contract)
-    _user = hex_to_address(user)
-    _value = int_to_uint(value)
-    _bytes = b"".join([_contract, _user, _value])
-    msg_hash = keccak(_bytes)
-    return msg_hash
-
-
-def sign(message, private_key):
-    signed = web3.account.Account.sign(message, private_key)
-    return {
-        'msg': signed['message'].hex(),
-        'msgHash': signed['messageHash'].hex(),
-        'v': signed['v'],
-        'r': signed['r'],
-        's': signed['s'],
-        'signature': signed['signature'].hex(),
-    }
+def sign(private_key, contract, user, *values):
+    abi_types = ['address', 'address'] + ['uint256'] * len(values)
+    msg = Web3.soliditySha3(abi_types, [contract, user] + list(values))
+    signed = Account.sign(msg, private_key)
+    signed = valmap(lambda x: x.hex() if isinstance(x, bytes) else x, signed)
+    return signed

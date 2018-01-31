@@ -22,3 +22,11 @@ lint:
 
 test:
 	pytest tests
+
+build-docs:
+	sphinx-apidoc -o docs/ . setup.py
+	$(MAKE) -C docs clean
+	$(MAKE) -C docs html
+
+docs: build-docs
+	open docs/_build/html/index.html

@@ -80,7 +80,7 @@ contract Eth0x2048 {
 		address signer = ecrecover(h, v, r, s);
 		require(signer == owner);
 
-		// Verfify that the user has supplied values contained in the signature
+		// Verify that the user has supplied values contained in the signature
 		bytes memory preamble = "\x19Ethereum Signed Message:\n32";
 		bytes32 proof = keccak256(preamble, keccak256(this, _addr, score));
 		require(proof == h);
@@ -114,7 +114,7 @@ contract Eth0x2048 {
 		address signer = ecrecover(h, v, r, s);
 		require(signer == owner);
 
-		// Verfify that the user has supplied values contained in the signature
+		// Verify that the user has supplied values contained in the signature
 		bytes memory preamble = "\x19Ethereum Signed Message:\n32";
 		bytes32 proof = keccak256(preamble, keccak256(this, _addr, _price));
 		require(proof == h);

@@ -5,23 +5,22 @@ from web3.utils.transactions import (
 from eth_tester.exceptions import (
     TransactionFailed,
 )
+from contracts import (
+    sign,
+)
 from eth_utils import (
     int_to_big_endian,
 )
-from contracts import (
-    hash_data,
-    sign,
-)
 
 
-def adjust_price(web3, contract, user, signed, score):
+def adjust_price(web3, signed, contract, user, price):
     txhash = contract.adjustPrice(
-        signed['msgHash'],
+        signed['messageHash'],
         signed['v'],
         int_to_big_endian(signed['r']),
         int_to_big_endian(signed['s']),
         user,
-        score,
+        price,
         transact={'from': user})
     txn_receipt = wait_for_transaction_receipt(web3, txhash)
     assert txn_receipt is not None
@@ -38,9 +37,8 @@ def test_price(web3, contract, owner_priv, user):
 
     # Generate actual output
     price = price + increment
-    msg_hash = hash_data(contract.address, user, price)
-    signed = sign(msg_hash, owner_priv)
-    adjust_price(web3, contract, user, signed, price)
+    signed = sign(owner_priv, contract.address, user, price)
+    adjust_price(web3, signed, contract, user, price)
     output = contract.price()
 
     # Test
@@ -49,16 +47,14 @@ def test_price(web3, contract, owner_priv, user):
 
 def test_signer_is_not_owner(web3, contract, _owner_priv, user):
     price = contract.price()
-    msg_hash = hash_data(contract.address, user, price)
-    signed = sign(msg_hash, _owner_priv)
+    signed = sign(_owner_priv, contract.address, user, price)
     with pytest.raises(TransactionFailed):
-        adjust_price(web3, contract, user, signed, price)
+        adjust_price(web3, signed, contract, user, price)
 
 
 def test_adjusts_wrong_price(web3, contract, owner_priv, user):
     price = contract.price()
-    msg_hash = hash_data(contract.address, user, price)
-    signed = sign(msg_hash, owner_priv)
+    signed = sign(owner_priv, contract.address, user, price)
     with pytest.raises(TransactionFailed):
         price = 0
-        adjust_price(web3, contract, user, signed, price)
+        adjust_price(web3, signed, contract, user, price)
