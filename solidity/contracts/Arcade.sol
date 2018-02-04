@@ -4,10 +4,10 @@ pragma solidity ^0.4.16;
 import './SafeMath.sol';
 
 
-/// @title Eth0x2048
+/// @title Arcade
 /// @author Joseph Stockermans (https://github.com/jstoxrocky)
 /// @dev Payment logic for 0x2048 blockchain-integrated game
-contract Eth0x2048 {
+contract Arcade {
 
 
 	using SafeMath for uint256;
@@ -20,7 +20,7 @@ contract Eth0x2048 {
 	uint256 public percentFee;
 
 
-	function Eth0x2048() public {
+	function Arcade() public {
 		// Set initial values
 		// Initial price is set to 0.01 ETH (~$0.25)
 		// Fees are set to 10% (~$0.03 cent on $0.25 payments)
