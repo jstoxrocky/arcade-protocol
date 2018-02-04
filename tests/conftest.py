@@ -1,9 +1,6 @@
 import pytest
 import os
 import json
-from web3.contract import (
-    ConciseContract,
-)
 from web3.utils.transactions import (
     wait_for_transaction_receipt,
 )
@@ -44,15 +41,14 @@ def contract(web3, Contract, owner):
     deploy_txn = Contract.deploy({'from': owner})
     deploy_receipt = wait_for_transaction_receipt(web3, deploy_txn)
     assert deploy_receipt is not None
-    _contract = Contract(address=deploy_receipt['contractAddress'])
-    concise_contract = ConciseContract(_contract)
-    assert owner == concise_contract.owner()
-    return concise_contract
+    contract = Contract(address=deploy_receipt['contractAddress'])
+    assert owner == contract.call({'from': owner}).owner()
+    return contract
 
 
 @pytest.fixture(scope="function")
 def user_has_paid(contract, user):
-    if not contract.getParticipation(user):
-        price = contract.price()
-        contract.pay(transact={'from': user, 'value': price})
-    assert contract.getParticipation(user)
+    if not contract.call({'from': user}).getParticipation(user):
+        price = contract.call({'from': user}).price()
+        contract.transact({'from': user, 'value': price}).pay()
+    assert contract.call({'from': user}).getParticipation(user)
