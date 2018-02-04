@@ -4,7 +4,7 @@ python:
 install:
     - pip install -r requirements.txt
 before_script:
-    - python -m solc.install
+    - python -m install_solc.py
 script:
     - pytest
     - flake8
