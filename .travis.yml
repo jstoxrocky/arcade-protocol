@@ -5,6 +5,7 @@ install:
     - pip install -r requirements.txt
 before_script:
     - python -m solc.install v0.4.19
+    - export SOLC_BINARY="$TRAVIS_BUILD_DIR/solc-v0.4.19/bin/solc"
 script:
     - pytest
     - flake8
