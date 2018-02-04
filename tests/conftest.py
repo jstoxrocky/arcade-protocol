@@ -26,8 +26,8 @@ def compile(filepath, contract_name, allow_paths=None):
 
 @pytest.fixture(scope="module")
 def Contract(web3):
-    filepath = os.path.join(CONTRACTS_DIR, "Eth0x2048.sol")
-    contract_name = 'Eth0x2048'
+    filepath = os.path.join(CONTRACTS_DIR, "Arcade.sol")
+    contract_name = 'Arcade'
     abi, code, code_runtime = compile(filepath, contract_name)
     return web3.eth.contract(
         abi=abi,
