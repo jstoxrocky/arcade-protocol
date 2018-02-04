@@ -14,14 +14,14 @@ from eth_utils import (
 
 
 def upload_score(web3, signed, contract, user, score):
-    txhash = contract.uploadScore(
+    txhash = contract.transact({'from': user}).uploadScore(
         signed['messageHash'],
         signed['v'],
         int_to_big_endian(signed['r']),
         int_to_big_endian(signed['s']),
         user,
         score,
-        transact={'from': user})
+    )
     txn_receipt = wait_for_transaction_receipt(web3, txhash)
     assert txn_receipt is not None
     tx = web3.eth.getTransaction(txhash)
@@ -37,7 +37,7 @@ def test_jackpot(web3, contract, owner_priv, user, user_has_paid):
     score = 1
     signed = sign(owner_priv, contract.address, user, score)
     upload_score(web3, signed, contract, user, score)
-    output = contract.jackpot()
+    output = contract.call({'from': user}).jackpot()
 
     # Test
     assert output == expected_ouput
@@ -45,13 +45,13 @@ def test_jackpot(web3, contract, owner_priv, user, user_has_paid):
 
 def test_round(web3, contract, owner_priv, user, user_has_paid):
     # Formulate expected output
-    expected_ouput = contract.round() + 1
+    expected_ouput = contract.call({'from': user}).round() + 1
 
     # Generate actual output
     score = 1
     signed = sign(owner_priv, contract.address, user, score)
     upload_score(web3, signed, contract, user, score)
-    output = contract.round()
+    output = contract.call({'from': user}).round()
 
     # Test
     assert output == expected_ouput
@@ -65,7 +65,7 @@ def test_participation(web3, contract, owner_priv, user, user_has_paid):
     score = 1
     signed = sign(owner_priv, contract.address, user, score)
     upload_score(web3, signed, contract, user, score)
-    output = contract.getParticipation(user)
+    output = contract.call({'from': user}).getParticipation(user)
 
     # Test
     assert output == expected_ouput
@@ -73,7 +73,7 @@ def test_participation(web3, contract, owner_priv, user, user_has_paid):
 
 def test_user_balance(web3, contract, owner_priv, user, user_has_paid):
     # Formulate expected output
-    jackpot = contract.jackpot()
+    jackpot = contract.call({'from': user}).jackpot()
     expected_ouput = web3.eth.getBalance(user) + jackpot
 
     # Generate actual output
@@ -88,7 +88,7 @@ def test_user_balance(web3, contract, owner_priv, user, user_has_paid):
 
 def test_contract_balance(web3, contract, owner_priv, user, user_has_paid):
     # Formulate expected output
-    jackpot = contract.jackpot()
+    jackpot = contract.call({'from': user}).jackpot()
     expected_ouput = web3.eth.getBalance(contract.address) - jackpot
 
     # Generate actual output
