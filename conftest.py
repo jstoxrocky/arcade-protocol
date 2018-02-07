@@ -1,14 +1,20 @@
 import pytest
-from web3 import Web3
+from web3 import Web3, Account
 from web3.providers.eth_tester import (
     EthereumTesterProvider,
 )
 from eth_utils import (
-    to_checksum_address,
+    pad_left,
+    int_to_big_endian,
 )
-from ethereum import (
-    tester,
-)
+
+
+num_accounts = 3
+accounts = []
+for i in range(1, num_accounts + 1):
+    pk_bytes = pad_left(int_to_big_endian(i), 32, b'\x00')
+    account = Account.privateKeyToAccount(pk_bytes)
+    accounts.append(account)
 
 
 @pytest.fixture(scope="module")
@@ -18,20 +24,21 @@ def web3():
 
 
 @pytest.fixture(scope="module")
-def owner_priv(web3):
-    return tester.keys[1]
-
-
-@pytest.fixture(scope="module")
-def _owner_priv(web3):
-    return tester.keys[3]
-
-
-@pytest.fixture(scope="module")
 def owner(web3):
-    return to_checksum_address(tester.accounts[1])
+    account = accounts[0]
+    assert web3.eth.getBalance(account.address) > 0
+    return account
+
+
+@pytest.fixture(scope="module")
+def _owner(web3):
+    account = accounts[1]
+    assert web3.eth.getBalance(account.address) > 0
+    return account
 
 
 @pytest.fixture(scope="module")
 def user(web3):
-    return to_checksum_address(tester.accounts[2])
+    account = accounts[2]
+    assert web3.eth.getBalance(account.address) > 0
+    return account

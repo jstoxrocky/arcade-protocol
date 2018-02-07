@@ -8,7 +8,7 @@ from eth_tester.exceptions import (
 
 
 def pay(web3, contract, user, price):
-    txhash = contract.transact({'from': user, 'value': price}).pay()
+    txhash = contract.functions.pay().transact({'from': user, 'value': price})
     txn_receipt = wait_for_transaction_receipt(web3, txhash)
     assert txn_receipt is not None
     tx = web3.eth.getTransaction(txhash)
@@ -18,15 +18,15 @@ def pay(web3, contract, user, price):
 
 def test_jackpot(web3, contract, user):
     # Formulate expected output
-    initial_value = contract.call({'from': user}).jackpot()
-    price = contract.call({'from': user}).price()
-    percent_fee = contract.call({'from': user}).percentFee()
+    initial_value = contract.functions.jackpot().call()
+    price = contract.functions.price().call()
+    percent_fee = contract.functions.percentFee().call()
     to_jackpot = int(price * (1 - (percent_fee / 100)))
     expected_output = initial_value + to_jackpot
 
     # Generate actual output
-    pay(web3, contract, user, price)
-    output = contract.call({'from': user}).jackpot()
+    pay(web3, contract, user.address, price)
+    output = contract.functions.jackpot().call()
 
     # Test
     assert output == expected_output
@@ -37,9 +37,9 @@ def test_participation(web3, contract, user):
     expected_ouput = True
 
     # Generate actual output
-    price = contract.call({'from': user}).price()
-    pay(web3, contract, user, price)
-    output = contract.call({'from': user}).getParticipation(user)
+    price = contract.functions.price().call()
+    pay(web3, contract, user.address, price)
+    output = contract.functions.getParticipation(user.address).call()
 
     # Test
     assert output == expected_ouput
@@ -47,12 +47,12 @@ def test_participation(web3, contract, user):
 
 def test_user_balance(web3, contract, user):
     # Formulate expected output
-    price = contract.call({'from': user}).price()
-    expected_ouput = web3.eth.getBalance(user) - price
+    price = contract.functions.price().call()
+    expected_ouput = web3.eth.getBalance(user.address) - price
 
     # Generate actual output
-    gas_cost = pay(web3, contract, user, price)
-    output = web3.eth.getBalance(user) + gas_cost  # Adjust for gas
+    gas_cost = pay(web3, contract, user.address, price)
+    output = web3.eth.getBalance(user.address) + gas_cost  # Adjust for gas
 
     # Test
     assert output == expected_ouput
@@ -60,26 +60,26 @@ def test_user_balance(web3, contract, user):
 
 def test_owner_balance(web3, contract, owner, user):
     # Formulate expected output
-    price = contract.call({'from': user}).price()
-    percent_fee = contract.call({'from': user}).percentFee()
+    price = contract.functions.price().call()
+    percent_fee = contract.functions.percentFee().call()
     to_owner = int(price * (percent_fee / 100))
-    expected_ouput = web3.eth.getBalance(owner) + to_owner
+    expected_ouput = web3.eth.getBalance(owner.address) + to_owner
     # Generate actual output
-    pay(web3, contract, user, price)
-    output = web3.eth.getBalance(owner)
+    pay(web3, contract, user.address, price)
+    output = web3.eth.getBalance(owner.address)
     # Test
     assert output == expected_ouput
 
 
 def test_contract_balance(web3, contract, user):
     # Formulate expected output
-    price = contract.call({'from': user}).price()
-    percent_fee = contract.call({'from': user}).percentFee()
+    price = contract.functions.price().call()
+    percent_fee = contract.functions.percentFee().call()
     to_jackpot = int(price * (1 - (percent_fee / 100)))
     expected_ouput = web3.eth.getBalance(contract.address) + to_jackpot
 
     # Generate actual output
-    pay(web3, contract, user, price)
+    pay(web3, contract, user.address, price)
     output = web3.eth.getBalance(contract.address)
 
     # Test
@@ -87,12 +87,12 @@ def test_contract_balance(web3, contract, user):
 
 
 def test_price_too_low(web3, contract, user):
-    price = contract.call({'from': user}).price() - 1
+    price = contract.functions.price().call() - 1
     with pytest.raises(TransactionFailed):
-        pay(web3, contract, user, price)
+        pay(web3, contract, user.address, price)
 
 
 def test_already_paid(web3, contract, user, user_has_paid):
-    price = contract.call({'from': user}).price()
+    price = contract.functions.price().call()
     with pytest.raises(TransactionFailed):
-        pay(web3, contract, user, price)
+        pay(web3, contract, user.address, price)

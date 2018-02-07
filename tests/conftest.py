@@ -38,17 +38,20 @@ def Contract(web3):
 
 @pytest.fixture(scope="function")
 def contract(web3, Contract, owner):
-    deploy_txn = Contract.deploy({'from': owner})
+    deploy_txn = Contract.deploy({'from': owner.address})
     deploy_receipt = wait_for_transaction_receipt(web3, deploy_txn)
     assert deploy_receipt is not None
     contract = Contract(address=deploy_receipt['contractAddress'])
-    assert owner == contract.call({'from': owner}).owner()
+    assert owner.address == contract.functions.owner().call()
     return contract
 
 
 @pytest.fixture(scope="function")
 def user_has_paid(contract, user):
-    if not contract.call({'from': user}).getParticipation(user):
-        price = contract.call({'from': user}).price()
-        contract.transact({'from': user, 'value': price}).pay()
-    assert contract.call({'from': user}).getParticipation(user)
+    if not contract.functions.getParticipation(user.address).call():
+        price = contract.functions.price().call()
+        contract.functions.pay().transact({
+            'from': user.address,
+            'value': price,
+        })
+    assert contract.functions.getParticipation(user.address).call()
