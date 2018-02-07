@@ -14,14 +14,14 @@ from eth_utils import (
 
 
 def upload_score(web3, signed, contract, user, score):
-    txhash = contract.transact({'from': user}).uploadScore(
+    txhash = contract.functions.uploadScore(
         signed['messageHash'],
         signed['v'],
         int_to_big_endian(signed['r']),
         int_to_big_endian(signed['s']),
         user,
         score,
-    )
+    ).transact({'from': user})
     txn_receipt = wait_for_transaction_receipt(web3, txhash)
     assert txn_receipt is not None
     tx = web3.eth.getTransaction(txhash)
@@ -29,102 +29,102 @@ def upload_score(web3, signed, contract, user, score):
     return gas_cost
 
 
-def test_jackpot(web3, contract, owner_priv, user, user_has_paid):
+def test_jackpot(web3, contract, owner, user, user_has_paid):
     # Formulate expected output
     expected_ouput = 0
 
     # Generate actual output
     score = 1
-    signed = sign(owner_priv, contract.address, user, score)
-    upload_score(web3, signed, contract, user, score)
-    output = contract.call({'from': user}).jackpot()
+    signed = sign(owner.privateKey, contract.address, user.address, score)
+    upload_score(web3, signed, contract, user.address, score)
+    output = contract.functions.jackpot().call()
 
     # Test
     assert output == expected_ouput
 
 
-def test_round(web3, contract, owner_priv, user, user_has_paid):
+def test_round(web3, contract, owner, user, user_has_paid):
     # Formulate expected output
-    expected_ouput = contract.call({'from': user}).round() + 1
+    expected_ouput = contract.functions.round().call() + 1
 
     # Generate actual output
     score = 1
-    signed = sign(owner_priv, contract.address, user, score)
-    upload_score(web3, signed, contract, user, score)
-    output = contract.call({'from': user}).round()
+    signed = sign(owner.privateKey, contract.address, user.address, score)
+    upload_score(web3, signed, contract, user.address, score)
+    output = contract.functions.round().call()
 
     # Test
     assert output == expected_ouput
 
 
-def test_participation(web3, contract, owner_priv, user, user_has_paid):
+def test_participation(web3, contract, owner, user, user_has_paid):
     # Formulate expected output
     expected_ouput = False
 
     # Generate actual output
     score = 1
-    signed = sign(owner_priv, contract.address, user, score)
-    upload_score(web3, signed, contract, user, score)
-    output = contract.call({'from': user}).getParticipation(user)
+    signed = sign(owner.privateKey, contract.address, user.address, score)
+    upload_score(web3, signed, contract, user.address, score)
+    output = contract.functions.getParticipation(user.address).call()
 
     # Test
     assert output == expected_ouput
 
 
-def test_user_balance(web3, contract, owner_priv, user, user_has_paid):
+def test_user_balance(web3, contract, owner, user, user_has_paid):
     # Formulate expected output
-    jackpot = contract.call({'from': user}).jackpot()
-    expected_ouput = web3.eth.getBalance(user) + jackpot
+    jackpot = contract.functions.jackpot().call()
+    expected_ouput = web3.eth.getBalance(user.address) + jackpot
 
     # Generate actual output
     score = 1
-    signed = sign(owner_priv, contract.address, user, score)
-    gas_cost = upload_score(web3, signed, contract, user, score)
-    output = web3.eth.getBalance(user) + gas_cost  # Adjust for gas
+    signed = sign(owner.privateKey, contract.address, user.address, score)
+    gas_cost = upload_score(web3, signed, contract, user.address, score)
+    output = web3.eth.getBalance(user.address) + gas_cost  # Adjust for gas
 
     # Test
     assert output == expected_ouput
 
 
-def test_contract_balance(web3, contract, owner_priv, user, user_has_paid):
+def test_contract_balance(web3, contract, owner, user, user_has_paid):
     # Formulate expected output
-    jackpot = contract.call({'from': user}).jackpot()
+    jackpot = contract.functions.jackpot().call()
     expected_ouput = web3.eth.getBalance(contract.address) - jackpot
 
     # Generate actual output
     score = 1
-    signed = sign(owner_priv, contract.address, user, score)
-    upload_score(web3, signed, contract, user, score)
+    signed = sign(owner.privateKey, contract.address, user.address, score)
+    upload_score(web3, signed, contract, user.address, score)
     output = web3.eth.getBalance(contract.address)
 
     # Test
     assert output == expected_ouput
 
 
-def test_signer_is_not_owner(web3, contract, _owner_priv, user, user_has_paid):
+def test_signer_is_not_owner(web3, contract, _owner, user, user_has_paid):
     score = 1
-    signed = sign(_owner_priv, contract.address, user, score)
+    signed = sign(_owner.privateKey, contract.address, user.address, score)
     with pytest.raises(TransactionFailed):
-        upload_score(web3, signed, contract, user, score)
+        upload_score(web3, signed, contract, user.address, score)
 
 
-def test_uploads_wrong_score(web3, contract, owner_priv, user, user_has_paid):
+def test_uploads_wrong_score(web3, contract, owner, user, user_has_paid):
     score = 1
     wrong_score = 100
-    signed = sign(owner_priv, contract.address, user, score)
+    signed = sign(owner.privateKey, contract.address, user.address, score)
     with pytest.raises(TransactionFailed):
-        upload_score(web3, signed, contract, user, wrong_score)
+        upload_score(web3, signed, contract, user.address, wrong_score)
 
 
-def test_score_too_low(web3, contract, owner_priv, user, user_has_paid):
+def test_score_too_low(web3, contract, owner, user, user_has_paid):
     score = 0
-    signed = sign(owner_priv, contract.address, user, score)
+    signed = sign(owner.privateKey, contract.address, user.address, score)
     with pytest.raises(TransactionFailed):
-        upload_score(web3, signed, contract, user, score)
+        upload_score(web3, signed, contract, user.address, score)
 
 
-def test_has_not_paid(web3, contract, owner_priv, user):
+def test_has_not_paid(web3, contract, owner, user):
     score = 1
-    signed = sign(owner_priv, contract.address, user, score)
+    signed = sign(owner.privateKey, contract.address, user.address, score)
     with pytest.raises(TransactionFailed):
-        upload_score(web3, signed, contract, user, score)
+        upload_score(web3, signed, contract, user.address, score)
