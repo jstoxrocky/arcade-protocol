@@ -14,6 +14,9 @@ from web3.utils.transactions import (
 )
 
 
+BASE_URL = 'http://webserver0x2048-staging.us-west-2.elasticbeanstalk.com'
+
+
 def test_contract_has_address(contract, rinkeby_address):
     assert contract.address == rinkeby_address
 
@@ -29,7 +32,7 @@ def test_contract_owner_is_from_envvar(web3, contract, owner):
 
 def test_signer_is_contract_owner(web3, contract, user):
     data = dict(user=user.address)
-    result = requests.get('http://127.0.0.1:5000/price', params=data)
+    result = requests.get(BASE_URL + '/price', params=data)
     data_from_endpoint = result.json()
     signed = data_from_endpoint['signature']
     signer = Account.recover(
@@ -44,7 +47,7 @@ def test_contract_address_same_as_webserver(web3, contract, owner, user):
     # Since all owner tests pass, and we have price, user
     # If this test fails, then it is the contract address
     data = dict(user=user.address)
-    result = requests.get('http://127.0.0.1:5000/price', params=data)
+    result = requests.get(BASE_URL + '/price', params=data)
     data_from_endpoint = result.json()
     price = data_from_endpoint['price']
     signed = data_from_endpoint['signature']
@@ -55,7 +58,7 @@ def test_contract_address_same_as_webserver(web3, contract, owner, user):
 @pytest.mark.skip
 def test_price(web3, contract, user):
     data = dict(user=user.address)
-    result = requests.get('http://127.0.0.1:5000/price', params=data)
+    result = requests.get(BASE_URL + '/price', params=data)
     data_from_endpoint = result.json()
     price = data_from_endpoint['price']
     signed = data_from_endpoint['signature']
