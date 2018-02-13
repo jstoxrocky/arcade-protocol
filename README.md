@@ -4,6 +4,16 @@ The 0x2048 project is a decentralized game of 2048 played over a state channel b
 
 The contracts are found in `solidity/contracts`. This directory contains two contracts, `Arcade.sol`, and `SafeMath.sol`. `Arcade.sol` is the contract of interest while `SafeMath.sol` is borrowed from OpenZeppelin (https://github.com/OpenZeppelin/zeppelin-solidity/blob/master/contracts/math/SafeMath.sol).
 
+## 0x2048-Project
+
+[Contracts](https://github.com/jstoxrocky/0x2048-contracts)
+
+[Frontend](https://github.com/jstoxrocky/0x2048-frontend)
+
+[Webserver](https://github.com/jstoxrocky/0x2048-webserver)
+
+[Game](https://github.com/jstoxrocky/0x2048-game)
+
 ## Setup
 
 ```bash

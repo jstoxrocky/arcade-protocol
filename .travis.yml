@@ -1,27 +1,12 @@
 language: python
 python:
   - "3.6"
-env:
-  - REDIS_HOST=localhost REDIS_PORT=6379
-services:
-  - redis-server
 install:
   - pip install -r requirements.txt
 before_script:
   - python -m solc.install v0.4.19
   - export SOLC_BINARY=$HOME/.py-solc/solc-v0.4.19/bin/solc
   - export LD_LIBRARY_PATH=$HOME/.py-solc/solc-v0.4.19/bin
-  - cd ..
-  - git clone https://github.com/jstoxrocky/0x2048-webserver.git webserver
-  - cd webserver
-  - pip install -r requirements.txt
-  - pip install gunicorn
-  - python setup.py install
-  - gunicorn --bind 0.0.0.0:5000 webserver/application --daemon
-  - cd ..
-  - ls
-  - cd 0x2048-contracts
-  - ls
 script:
   - pytest
   - flake8
