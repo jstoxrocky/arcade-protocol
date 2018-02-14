@@ -14,7 +14,7 @@ from web3.utils.transactions import (
 )
 
 
-BASE_URL = 'http://webserver0x2048-staging.us-west-2.elasticbeanstalk.com'
+BASE_URL = 'https://www.0x2048-int.net'
 
 
 def test_contract_has_address(contract, rinkeby_address):
