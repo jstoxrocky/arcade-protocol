@@ -101,9 +101,9 @@ def test_contract_balance(web3, contract, owner, user, user_has_paid):
     assert output == expected_ouput
 
 
-def test_signer_is_not_owner(web3, contract, _owner, user, user_has_paid):
+def test_signer_is_not_owner(web3, contract, user2, user, user_has_paid):
     score = 1
-    signed = sign(_owner.privateKey, contract.address, user.address, score)
+    signed = sign(user2.privateKey, contract.address, user.address, score)
     with pytest.raises(TransactionFailed):
         upload_score(web3, signed, contract, user.address, score)
 

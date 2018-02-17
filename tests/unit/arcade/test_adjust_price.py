@@ -45,9 +45,9 @@ def test_price(web3, contract, owner, user):
     assert output == expected_ouput
 
 
-def test_signer_is_not_owner(web3, contract, _owner, user):
+def test_signer_is_not_owner(web3, contract, user2, user):
     price = contract.functions.price().call()
-    signed = sign(_owner.privateKey, contract.address, user.address, price)
+    signed = sign(user2.privateKey, contract.address, user.address, price)
     with pytest.raises(TransactionFailed):
         adjust_price(web3, signed, contract, user.address, price)
 
