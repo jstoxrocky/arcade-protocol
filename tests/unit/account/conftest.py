@@ -6,6 +6,9 @@ from web3.utils.transactions import (
 from contracts import (
     CONTRACTS_DIR,
 )
+from eth_utils import (
+    to_wei,
+)
 
 
 @pytest.fixture(scope="module")
@@ -30,12 +33,22 @@ def contract(web3, Contract, owner):
     return contract
 
 
+@pytest.fixture(scope="function")
+def function_specific_contract(web3, Contract, owner):
+    deploy_txn = Contract.deploy({'from': owner.address})
+    deploy_receipt = wait_for_transaction_receipt(web3, deploy_txn)
+    assert deploy_receipt is not None
+    contract = Contract(address=deploy_receipt['contractAddress'])
+    assert owner.address == contract.functions.owner().call()
+    return contract
+
+
 @pytest.fixture(scope="module", autouse=True)
 def desposited_user(web3, contract, user2):
-    balance = 100
+    value = to_wei(21, 'ether')
     txhash = contract.functions.lock().transact({
         'from': user2.address,
-        'value': balance,
+        'value': value,
     })
     txn_receipt = wait_for_transaction_receipt(web3, txhash)
     assert txn_receipt is not None

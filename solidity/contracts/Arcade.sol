@@ -53,7 +53,7 @@ contract Arcade {
 		uint256 toJackpot = _value.sub(fee);
 
 		// Increment jackpot and transfer fees
-		jackpot += toJackpot;
+		jackpot = jackpot.add(toJackpot);
 		owner.transfer(fee);
 	}
 
