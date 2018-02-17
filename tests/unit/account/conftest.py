@@ -20,7 +20,7 @@ def Contract(web3, compile):
     )
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="module")
 def contract(web3, Contract, owner):
     deploy_txn = Contract.deploy({'from': owner.address})
     deploy_receipt = wait_for_transaction_receipt(web3, deploy_txn)
@@ -30,12 +30,13 @@ def contract(web3, Contract, owner):
     return contract
 
 
-@pytest.fixture(scope="function")
-def user_has_paid(contract, user):
-    if not contract.functions.getParticipation(user.address).call():
-        price = contract.functions.price().call()
-        contract.functions.pay().transact({
-            'from': user.address,
-            'value': price,
-        })
-    assert contract.functions.getParticipation(user.address).call()
+@pytest.fixture(scope="module", autouse=True)
+def desposited_user(web3, contract, user2):
+    balance = 100
+    txhash = contract.functions.lock().transact({
+        'from': user2.address,
+        'value': balance,
+    })
+    txn_receipt = wait_for_transaction_receipt(web3, txhash)
+    assert txn_receipt is not None
+    return user2
