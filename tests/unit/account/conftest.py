@@ -33,16 +33,6 @@ def contract(web3, Contract, owner):
     return contract
 
 
-@pytest.fixture(scope="function")
-def function_specific_contract(web3, Contract, owner):
-    deploy_txn = Contract.deploy({'from': owner.address})
-    deploy_receipt = wait_for_transaction_receipt(web3, deploy_txn)
-    assert deploy_receipt is not None
-    contract = Contract(address=deploy_receipt['contractAddress'])
-    assert owner.address == contract.functions.owner().call()
-    return contract
-
-
 @pytest.fixture(scope="module", autouse=True)
 def desposited_user(web3, contract, user2):
     value = to_wei(21, 'ether')
@@ -53,3 +43,9 @@ def desposited_user(web3, contract, user2):
     txn_receipt = wait_for_transaction_receipt(web3, txhash)
     assert txn_receipt is not None
     return user2
+
+
+@pytest.fixture(scope="module")
+def EthereumTester(web3):
+    provider, = web3.providers
+    return provider.ethereum_tester
