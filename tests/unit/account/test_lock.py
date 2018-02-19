@@ -69,18 +69,21 @@ def test_user_balance(web3, contract, user):
 def test_timeout(web3, contract, user):
     """
     It should add a timeout to the user's arcade account
-    of block_timeout blocks
+    of block_timeout seconds
     """
     value = to_wei(17, 'ether')
-    block_timeout = contract.functions.blockTimeout().call()
-    expected_timeout = web3.eth.blockNumber + block_timeout
     lock(web3, contract, user, value)
+
+    block_timeout = contract.functions.blockTimeout().call()
+    current_block = web3.eth.getBlock('latest')
+    timestamp = current_block.timestamp
+    expected_timeout = timestamp + block_timeout
+
     timeout = contract.functions.timeoutOf(user.address).call()
-    # Add one since eth-tester increments a block on transaction
-    assert timeout == expected_timeout + 1
+    assert timeout == expected_timeout
 
 
-def test_unlock_before_timeout(web3, contract, EthereumTester, user):
+def test_unlock_before_timeout(web3, contract, user):
     """
     It should not allow a user to unlock funds in their arcade account
     before the timeout is up
@@ -105,7 +108,7 @@ def test_unlock_user_arcade_balance(web3, contract, EthereumTester, user):
     # but the lock function mines
     # one block when called so this is not necessary
     block_timeout = contract.functions.blockTimeout().call()
-    EthereumTester.mine_blocks(num_blocks=block_timeout, coinbase=None)
+    EthereumTester.mine_blocks(num_blocks=block_timeout)
 
     expected_balance = 0
     unlock(web3, contract, user)
@@ -121,7 +124,7 @@ def test_unlock_user_balance(web3, contract, EthereumTester, user):
     value = to_wei(17, 'ether')
     lock(web3, contract, user, value)
     block_timeout = contract.functions.blockTimeout().call()
-    EthereumTester.mine_blocks(num_blocks=block_timeout, coinbase=None)
+    EthereumTester.mine_blocks(num_blocks=block_timeout)
 
     wallet_balance = web3.eth.getBalance(user.address)
     arcade_balance = contract.functions.balanceOf(user.address).call()
@@ -140,7 +143,7 @@ def test_unlock_contract_balance(web3, contract, EthereumTester, user):
     value = to_wei(17, 'ether')
     lock(web3, contract, user, value)
     block_timeout = contract.functions.blockTimeout().call()
-    EthereumTester.mine_blocks(num_blocks=block_timeout, coinbase=None)
+    EthereumTester.mine_blocks(num_blocks=block_timeout)
 
     contract_balance = web3.eth.getBalance(contract.address)
     arcade_balance = contract.functions.balanceOf(user.address).call()
