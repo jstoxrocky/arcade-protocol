@@ -28,14 +28,3 @@ def contract(web3, Contract, owner):
     contract = Contract(address=deploy_receipt['contractAddress'])
     assert owner.address == contract.functions.owner().call()
     return contract
-
-
-@pytest.fixture(scope="function")
-def user_has_paid(contract, user):
-    if not contract.functions.getParticipation(user.address).call():
-        price = contract.functions.price().call()
-        contract.functions.pay().transact({
-            'from': user.address,
-            'value': price,
-        })
-    assert contract.functions.getParticipation(user.address).call()
