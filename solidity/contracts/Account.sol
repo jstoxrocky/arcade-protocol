@@ -72,8 +72,4 @@ contract Account {
     // Transfer value from contract to owner
     owner.transfer(_value);
   }
-
-  function stupid() returns (uint256) {
-    return now;
-  }
 }
