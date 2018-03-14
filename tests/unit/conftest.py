@@ -39,14 +39,14 @@ def owner(web3):
 
 @pytest.fixture(scope="module")
 def user(web3):
-    account = accounts[2]
+    account = accounts[1]
     assert web3.eth.getBalance(account.address) > 0
     return account
 
 
 @pytest.fixture(scope="module")
 def user2(web3):
-    account = accounts[1]
+    account = accounts[2]
     assert web3.eth.getBalance(account.address) > 0
     return account
 
