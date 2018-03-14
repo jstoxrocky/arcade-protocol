@@ -10,8 +10,8 @@ from eth_tester.exceptions import (
 )
 
 
-def lock(web3, contract, user, value):
-    txhash = contract.functions.lock().transact({
+def deposit(web3, contract, user, value):
+    txhash = contract.functions.deposit().transact({
         'from': user.address,
         'value': value,
     })
@@ -22,8 +22,8 @@ def lock(web3, contract, user, value):
     return gas_cost
 
 
-def unlock(web3, contract, user):
-    txhash = contract.functions.unlock().transact({'from': user.address})
+def withdraw(web3, contract, user):
+    txhash = contract.functions.withdraw().transact({'from': user.address})
     txn_receipt = wait_for_transaction_receipt(web3, txhash)
     assert txn_receipt is not None
     tx = web3.eth.getTransaction(txhash)
@@ -37,7 +37,7 @@ def test_user_arcade_balance(web3, contract, user):
     """
     value = to_wei(17, 'ether')
     expected_balance = value
-    lock(web3, contract, user, value)
+    deposit(web3, contract, user, value)
     balance = contract.functions.balanceOf(user.address).call()
     assert balance == expected_balance
 
@@ -49,7 +49,7 @@ def test_contract_balance(web3, contract, user):
     balance = web3.eth.getBalance(contract.address)
     value = to_wei(17, 'ether')
     expected_balance = balance + value
-    lock(web3, contract, user, value)
+    deposit(web3, contract, user, value)
     balance = web3.eth.getBalance(contract.address)
     assert balance == expected_balance
 
@@ -61,7 +61,7 @@ def test_user_balance(web3, contract, user):
     balance = web3.eth.getBalance(user.address)
     value = to_wei(17, 'ether')
     expected_balance = balance - value
-    gas_cost = lock(web3, contract, user, value)
+    gas_cost = deposit(web3, contract, user, value)
     balance = web3.eth.getBalance(user.address)
     assert balance == expected_balance - gas_cost
 
@@ -69,10 +69,10 @@ def test_user_balance(web3, contract, user):
 def test_timeout(web3, contract, user):
     """
     It should add a timeout to the user's arcade account
-    of block_timeout seconds
+    of bdeposit_timeout seconds
     """
     value = to_wei(17, 'ether')
-    lock(web3, contract, user, value)
+    deposit(web3, contract, user, value)
 
     block_timeout = contract.functions.blockTimeout().call()
     current_block = web3.eth.getBlock('latest')
@@ -83,46 +83,46 @@ def test_timeout(web3, contract, user):
     assert timeout == expected_timeout
 
 
-def test_unlock_before_timeout(web3, contract, user):
+def test_withdraw_before_timeout(web3, contract, user):
     """
-    It should not allow a user to unlock funds in their arcade account
+    It should not allow a user to withdraw funds in their arcade account
     before the timeout is up
     """
     value = to_wei(17, 'ether')
-    lock(web3, contract, user, value)
+    deposit(web3, contract, user, value)
     with pytest.raises(TransactionFailed):
-        unlock(web3, contract, user)
+        withdraw(web3, contract, user)
 
 
-def test_unlock_user_arcade_balance(web3, contract, EthereumTester, user):
+def test_withdraw_user_arcade_balance(web3, contract, EthereumTester, user):
     """
     It should subtract all ETH from a user's arcade account
     """
     value = to_wei(17, 'ether')
-    # Lock and mine
-    lock(web3, contract, user, value)
-    # Mine blocks
-    # The unlock function requires that MORE than
-    # block_timeout blocks has elapsed
-    # We would need to mine block_timeout + 1 blocks
-    # but the lock function mines
-    # one block when called so this is not necessary
+    # deposit and mine
+    deposit(web3, contract, user, value)
+    # Mine bdeposits
+    # The withdraw function requires that MORE than
+    # block_timeout block has elapsed
+    # We would need to mine block_timeout + 1 bdeposits
+    # but the deposit function mines
+    # one bdeposit when called so this is not necessary
     block_timeout = contract.functions.blockTimeout().call()
     EthereumTester.mine_blocks(num_blocks=block_timeout)
 
     expected_balance = 0
-    unlock(web3, contract, user)
+    withdraw(web3, contract, user)
     balance = contract.functions.balanceOf(user.address).call()
     assert balance == expected_balance
 
 
-def test_unlock_user_balance(web3, contract, EthereumTester, user):
+def test_withdraw_user_balance(web3, contract, EthereumTester, user):
     """
     It should increase the user's Ethereum wallet by the balance amount
     """
-    # Lock and mine
+    # deposit and mine
     value = to_wei(17, 'ether')
-    lock(web3, contract, user, value)
+    deposit(web3, contract, user, value)
     block_timeout = contract.functions.blockTimeout().call()
     EthereumTester.mine_blocks(num_blocks=block_timeout)
 
@@ -130,18 +130,18 @@ def test_unlock_user_balance(web3, contract, EthereumTester, user):
     arcade_balance = contract.functions.balanceOf(user.address).call()
     expected_wallet_balance = wallet_balance + arcade_balance
 
-    unlock_gas_cost = unlock(web3, contract, user)
+    withdraw_gas_cost = withdraw(web3, contract, user)
     wallet_balance = web3.eth.getBalance(user.address)
-    assert wallet_balance == expected_wallet_balance - unlock_gas_cost
+    assert wallet_balance == expected_wallet_balance - withdraw_gas_cost
 
 
-def test_unlock_contract_balance(web3, contract, EthereumTester, user):
+def test_withdraw_contract_balance(web3, contract, EthereumTester, user):
     """
     It should decrease the contract's Ethereum wallet by the balance amount
     """
-    # Lock and mine
+    # deposit and mine
     value = to_wei(17, 'ether')
-    lock(web3, contract, user, value)
+    deposit(web3, contract, user, value)
     block_timeout = contract.functions.blockTimeout().call()
     EthereumTester.mine_blocks(num_blocks=block_timeout)
 
@@ -149,6 +149,6 @@ def test_unlock_contract_balance(web3, contract, EthereumTester, user):
     arcade_balance = contract.functions.balanceOf(user.address).call()
     expected_contract_balance = contract_balance - arcade_balance
 
-    unlock(web3, contract, user)
+    withdraw(web3, contract, user)
     contract_balance = web3.eth.getBalance(contract.address)
     assert contract_balance == expected_contract_balance

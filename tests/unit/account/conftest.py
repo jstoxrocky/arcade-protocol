@@ -36,7 +36,7 @@ def contract(web3, Contract, owner):
 @pytest.fixture(scope="module", autouse=True)
 def desposited_user(web3, contract, user2):
     value = to_wei(21, 'ether')
-    txhash = contract.functions.lock().transact({
+    txhash = contract.functions.deposit().transact({
         'from': user2.address,
         'value': value,
     })

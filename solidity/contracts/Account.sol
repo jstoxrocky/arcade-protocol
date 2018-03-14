@@ -13,10 +13,13 @@ contract Account {
   uint256 public blockTimeout;
   mapping (address => uint256) public balances;
   mapping (address => uint256) public timeouts;
+  mapping (address => uint256) public iousCount;
+  uint256 public price;
 
   function Account() public {
     owner = msg.sender;
     blockTimeout = 5; // 5 seconds
+    price = 7;
   }
 
   /// @dev Check the arcade account balance of a user.
@@ -35,7 +38,7 @@ contract Account {
   /// @dev by the user after the timeout. The contract owner cannot withdraw funds without
   /// @dev a signed message from the user for a specified amount.
   /// @dev Users are always in control of their funds.
-  function lock() public payable {
+  function deposit() public payable {
     // Value gets sent to contract address
     balances[msg.sender] = balances[msg.sender].add(msg.value);
     timeouts[msg.sender] = now + blockTimeout;
@@ -43,33 +46,42 @@ contract Account {
 
   /// @dev Unlock and withdraw ETH from state-channel.
   /// @dev Must be called after the timeout.
-  function unlock() view public {
+  function withdraw() view public {
     require(now > timeouts[msg.sender]);
     uint256 _balance = balances[msg.sender];
     balances[msg.sender] = 0;
     msg.sender.transfer(_balance);
   }
 
+
+  function getNonce(address user) view public returns (uint256) {
+    return iousCount[user];
+  }
+
   /// @dev Transfer ETH from a user's arcade account to the game owner.
   /// @dev Transfers can only occur if the user signs and sends an IOU message
   /// @dev to the game server with the specified amount.
   /// @dev Users are always in control of their funds.
-  function transferToOwner(
-    bytes32 h, uint8 v, bytes32 r, bytes32 s,
-    address _addr, uint256 _value) public {
+  function finalizeIOU(
+    uint8 v, bytes32 r, bytes32 s,
+    bytes32 schemaHash, address user, uint256 nonce) public {
+    // We assume signature was signed with EIP712
     // Verify signer is user
-    address signer = ecrecover(h, v, r, s);
-    require(signer == _addr);
-    // Verify that the function caller (owner) has supplied values contained in the signature
-    bytes memory preamble = "\x19Ethereum Signed Message:\n32";
-    bytes32 proof = keccak256(preamble, keccak256(this, _addr, _value));
-    require(proof == h);
+    bytes32 messageHash = keccak256(schemaHash, keccak256(this, user, nonce));
+    address signer = ecrecover(messageHash, v, r, s);
+    require(signer == user);
+    // Transferred value is hardcoded in the state channel.
+    // A nonce is tracked in the contract.
+    // Only a nonce one greater than the current value will be able to transfer
+    // This is inefficient for state-channels as 1 payment requires 1 transaction
+    // to the network, but it allows for a safer pay-per-play mechanism
+    require(nonce == iousCount[user] + 1);
     // Decrement user's balance
     // Will throw if user does not have enough locked up
     // Onus is on the owner who recieved a signed state-channel IOU from the user
     // to withdraw before the timeout is up
-    balances[_addr] = balances[_addr].sub(_value);
+    balances[user] = balances[user].sub(price);
     // Transfer value from contract to owner
-    owner.transfer(_value);
+    owner.transfer(price);
   }
 }
