@@ -31,6 +31,15 @@ def withdraw(web3, contract, user):
     return gas_cost
 
 
+def test_deposit_not_a_multiple_of_price(web3, contract, user):
+    """
+    It should reject the transaction
+    """
+    value = to_wei(0.0005, 'ether')
+    with pytest.raises(TransactionFailed):
+        deposit(web3, contract, user, value)
+
+
 def test_user_arcade_balance(web3, contract, user):
     """
     It should add 17 ETH to the user's arcade account

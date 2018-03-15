@@ -19,7 +19,7 @@ contract Account {
   function Account() public {
     owner = msg.sender;
     blockTimeout = 60*60*24*7; // 1 week
-    price = 7;
+    price = 1000000000000000; // 0.001 ETH
   }
 
   /// @dev Check the arcade account balance of a user.
@@ -39,18 +39,25 @@ contract Account {
   /// @dev a signed message from the user for a specified amount.
   /// @dev Users are always in control of their funds.
   function deposit() public payable {
+    // Require deposit to be a multiple of the price
+    require(msg.value % price == 0);
     // Value gets sent to contract address
     balances[msg.sender] = balances[msg.sender].add(msg.value);
-    timeouts[msg.sender] = now + blockTimeout;
+    // Add now to the timout if this is the first deposit for this user
+    if (timeouts[msg.sender] == 0) {
+      timeouts[msg.sender] = timeouts[msg.sender].add(now);
+    }
+    // Each time a deposit is made we increment the timeout by blockTimeout
+    timeouts[msg.sender] = timeouts[msg.sender].add(blockTimeout);
   }
 
   /// @dev Unlock and withdraw ETH from state-channel.
   /// @dev Must be called after the timeout.
   function withdraw() view public {
     require(now > timeouts[msg.sender]);
-    uint256 _balance = balances[msg.sender];
+    uint256 balance = balances[msg.sender];
     balances[msg.sender] = 0;
-    msg.sender.transfer(_balance);
+    msg.sender.transfer(balance);
   }
 
   function getNonce(address user) view public returns (uint256) {
