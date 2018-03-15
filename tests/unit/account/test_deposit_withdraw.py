@@ -101,14 +101,11 @@ def test_withdraw_user_arcade_balance(web3, contract, EthereumTester, user):
     value = to_wei(17, 'ether')
     # deposit and mine
     deposit(web3, contract, user, value)
-    # Mine bdeposits
-    # The withdraw function requires that MORE than
-    # block_timeout block has elapsed
-    # We would need to mine block_timeout + 1 bdeposits
-    # but the deposit function mines
-    # one bdeposit when called so this is not necessary
     block_timeout = contract.functions.blockTimeout().call()
-    EthereumTester.mine_blocks(num_blocks=block_timeout)
+    current_block = web3.eth.getBlock('latest')
+    timestamp = current_block.timestamp
+    # +1 since inequality is strictly greater than
+    EthereumTester.time_travel(timestamp + block_timeout + 1)
 
     expected_balance = 0
     withdraw(web3, contract, user)
@@ -124,7 +121,10 @@ def test_withdraw_user_balance(web3, contract, EthereumTester, user):
     value = to_wei(17, 'ether')
     deposit(web3, contract, user, value)
     block_timeout = contract.functions.blockTimeout().call()
-    EthereumTester.mine_blocks(num_blocks=block_timeout)
+    current_block = web3.eth.getBlock('latest')
+    timestamp = current_block.timestamp
+    # +1 since inequality is strictly greater than
+    EthereumTester.time_travel(timestamp + block_timeout + 1)
 
     wallet_balance = web3.eth.getBalance(user.address)
     arcade_balance = contract.functions.balanceOf(user.address).call()
@@ -143,7 +143,10 @@ def test_withdraw_contract_balance(web3, contract, EthereumTester, user):
     value = to_wei(17, 'ether')
     deposit(web3, contract, user, value)
     block_timeout = contract.functions.blockTimeout().call()
-    EthereumTester.mine_blocks(num_blocks=block_timeout)
+    current_block = web3.eth.getBlock('latest')
+    timestamp = current_block.timestamp
+    # +1 since inequality is strictly greater than
+    EthereumTester.time_travel(timestamp + block_timeout + 1)
 
     contract_balance = web3.eth.getBalance(contract.address)
     arcade_balance = contract.functions.balanceOf(user.address).call()

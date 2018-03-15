@@ -18,7 +18,7 @@ contract Account {
 
   function Account() public {
     owner = msg.sender;
-    blockTimeout = 5; // 5 seconds
+    blockTimeout = 60*60*24*7; // 1 week
     price = 7;
   }
 
@@ -53,7 +53,6 @@ contract Account {
     msg.sender.transfer(_balance);
   }
 
-
   function getNonce(address user) view public returns (uint256) {
     return iousCount[user];
   }
@@ -65,8 +64,8 @@ contract Account {
   function finalizeIOU(
     uint8 v, bytes32 r, bytes32 s,
     bytes32 schemaHash, address user, uint256 nonce) public {
-    // We assume signature was signed with EIP712
     // Verify signer is user
+    // We assume signature was signed with EIP712
     bytes32 messageHash = keccak256(schemaHash, keccak256(this, user, nonce));
     address signer = ecrecover(messageHash, v, r, s);
     require(signer == user);
