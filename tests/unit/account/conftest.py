@@ -23,7 +23,7 @@ def Contract(web3, compile):
     )
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def contract(web3, Contract, owner):
     deploy_txn = Contract.deploy({'from': owner.address})
     deploy_receipt = wait_for_transaction_receipt(web3, deploy_txn)
@@ -33,9 +33,9 @@ def contract(web3, Contract, owner):
     return contract
 
 
-@pytest.fixture(scope="module", autouse=True)
+@pytest.fixture(scope="function", autouse=True)
 def desposited_user(web3, contract, user2):
-    value = to_wei(21, 'ether')
+    value = to_wei(10, 'ether')
     txhash = contract.functions.deposit().transact({
         'from': user2.address,
         'value': value,
