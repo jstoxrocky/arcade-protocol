@@ -83,10 +83,10 @@ def test_timeout(web3, contract, user):
     value = to_wei(17, 'ether')
     deposit(web3, contract, user, value)
 
-    block_timeout = contract.functions.blockTimeout().call()
+    timeout = contract.functions.oneWeek().call()
     current_block = web3.eth.getBlock('latest')
     timestamp = current_block.timestamp
-    expected_timeout = timestamp + block_timeout
+    expected_timeout = timestamp + timeout
 
     timeout = contract.functions.timeoutOf(user.address).call()
     assert timeout == expected_timeout
@@ -110,11 +110,11 @@ def test_withdraw_user_arcade_balance(web3, contract, EthereumTester, user):
     value = to_wei(17, 'ether')
     # deposit and mine
     deposit(web3, contract, user, value)
-    block_timeout = contract.functions.blockTimeout().call()
+    timeout = contract.functions.oneWeek().call()
     current_block = web3.eth.getBlock('latest')
     timestamp = current_block.timestamp
     # +1 since inequality is strictly greater than
-    EthereumTester.time_travel(timestamp + block_timeout + 1)
+    EthereumTester.time_travel(timestamp + timeout + 1)
 
     expected_balance = 0
     withdraw(web3, contract, user)
@@ -129,11 +129,11 @@ def test_withdraw_user_balance(web3, contract, EthereumTester, user):
     # deposit and mine
     value = to_wei(17, 'ether')
     deposit(web3, contract, user, value)
-    block_timeout = contract.functions.blockTimeout().call()
+    timeout = contract.functions.oneWeek().call()
     current_block = web3.eth.getBlock('latest')
     timestamp = current_block.timestamp
     # +1 since inequality is strictly greater than
-    EthereumTester.time_travel(timestamp + block_timeout + 1)
+    EthereumTester.time_travel(timestamp + timeout + 1)
 
     wallet_balance = web3.eth.getBalance(user.address)
     arcade_balance = contract.functions.balanceOf(user.address).call()
@@ -151,11 +151,11 @@ def test_withdraw_contract_balance(web3, contract, EthereumTester, user):
     # deposit and mine
     value = to_wei(17, 'ether')
     deposit(web3, contract, user, value)
-    block_timeout = contract.functions.blockTimeout().call()
+    timeout = contract.functions.oneWeek().call()
     current_block = web3.eth.getBlock('latest')
     timestamp = current_block.timestamp
     # +1 since inequality is strictly greater than
-    EthereumTester.time_travel(timestamp + block_timeout + 1)
+    EthereumTester.time_travel(timestamp + timeout + 1)
 
     contract_balance = web3.eth.getBalance(contract.address)
     arcade_balance = contract.functions.balanceOf(user.address).call()
