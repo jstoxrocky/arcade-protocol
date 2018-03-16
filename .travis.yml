@@ -3,6 +3,8 @@ python:
   - "3.6"
 install:
   - pip install -r requirements.txt
+  - nvm install node
+  - npm install -g solhint
 before_script:
   - python -m solc.install v0.4.19
   - export SOLC_BINARY=$HOME/.py-solc/solc-v0.4.19/bin/solc
@@ -10,5 +12,7 @@ before_script:
 script:
   - pytest
   - flake8
+  - pwd
+  - solhint solidity/contracts/*.sol
 notifications:
   email: false
