@@ -13,7 +13,6 @@ contract Arcade {
     uint256 public highscore;
     uint256 public jackpot;
     address public owner;
-    uint256 public percentFee;
 
     function Arcade() public {
         // Set initial values
@@ -23,7 +22,6 @@ contract Arcade {
         jackpot = 0;
         round = 1;
         owner = msg.sender;
-        percentFee = 10;
     }
 
     /// @dev Function for a user to upload their highscore
