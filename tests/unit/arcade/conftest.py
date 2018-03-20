@@ -13,7 +13,6 @@ def Contract(web3, compile):
     filepath = os.path.join(CONTRACTS_DIR, "Arcade.sol")
     contract_name = 'Arcade'
     abi, code, code_runtime = compile(filepath, contract_name)
-    print(abi)
     return web3.eth.contract(
         abi=abi,
         bytecode=code,
