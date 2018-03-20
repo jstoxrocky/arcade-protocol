@@ -1,4 +1,3 @@
-import pytest
 import os
 import json
 
@@ -10,13 +9,11 @@ integration_tests_json = os.path.join(base, 'integration-tests-json')
 constants_dir = os.path.join(integration_tests_json, 'constants')
 
 
-@pytest.mark.skip
 def test_contract_has_code(web3, account_contract):
     contract = account_contract
     assert web3.eth.getCode(contract.address) != b''
 
 
-@pytest.mark.skip
 def test_contract_owner_matches_integration_json(account_contract):
     contract = account_contract
     contract_owner = contract.functions.owner().call()
@@ -32,3 +29,11 @@ def test_contract_address_matches_integration_json(account_contract):
     with open(filepath) as f:
         data = json.load(f)
     assert data['account'] == contract.address
+
+
+def test_contract_abi_matches_integration_json(account_contract):
+    contract = account_contract
+    filepath = os.path.join(constants_dir, "abi.json")
+    with open(filepath) as f:
+        data = json.load(f)
+    assert data['account'] == contract.abi
