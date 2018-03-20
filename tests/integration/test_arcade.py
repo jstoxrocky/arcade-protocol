@@ -29,3 +29,11 @@ def test_contract_address_matches_integration_json(arcade_contract):
     with open(filepath) as f:
         data = json.load(f)
     assert data['arcade'] == contract.address
+
+
+def test_contract_abi_matches_integration_json(arcade_contract):
+    contract = arcade_contract
+    filepath = os.path.join(constants_dir, "abi.json")
+    with open(filepath) as f:
+        data = json.load(f)
+    assert data['arcade'] == contract.abi
