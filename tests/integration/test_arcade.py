@@ -5,7 +5,7 @@ import json
 this = os.path.dirname(__file__)
 tests = os.path.join(this, '..')
 base = os.path.abspath(os.path.join(tests, '..'))
-integration_tests_json = os.path.join(base, 'integration-tests-json')
+integration_tests_json = os.path.join(base, 'integration-json-fixtures')
 constants_dir = os.path.join(integration_tests_json, 'constants')
 
 
