@@ -13,6 +13,6 @@ script:
   - pytest
   - flake8
   - pwd
-  - solhint solidity/contracts/*.sol
+  - solhint solidity/contracts/Arcade.sol
 notifications:
   email: false
