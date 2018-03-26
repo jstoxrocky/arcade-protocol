@@ -11,8 +11,7 @@ from toolz.dicttoolz import (
 _inner_file = os.path.dirname(__file__)
 _outer_dir_rel = os.path.join(_inner_file, '..')
 _outer_dir_abs = os.path.abspath(_outer_dir_rel)
-_solidity_dir = os.path.join(_outer_dir_abs, 'solidity')
-CONTRACTS_DIR = os.path.join(_solidity_dir, 'contracts')
+CONTRACTS_DIR = os.path.join(_outer_dir_abs, 'solidity')
 
 
 def sign(private_key, contract, user, *values):

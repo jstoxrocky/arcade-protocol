@@ -15,7 +15,6 @@ from eth_utils import (
 
 def upload_score(web3, signed, contract, user, score):
     txhash = contract.functions.uploadScore(
-        signed['messageHash'],
         signed['v'],
         int_to_big_endian(signed['r']),
         int_to_big_endian(signed['s']),
@@ -31,7 +30,7 @@ def upload_score(web3, signed, contract, user, score):
 
 def test_jackpot(web3, contract, owner, user):
     # Formulate expected output
-    expected_ouput = 0
+    expected_output = 0
 
     # Generate actual output
     score = 1
@@ -40,12 +39,12 @@ def test_jackpot(web3, contract, owner, user):
     output = contract.functions.jackpot().call()
 
     # Test
-    assert output == expected_ouput
+    assert output == expected_output
 
 
 def test_round(web3, contract, owner, user):
     # Formulate expected output
-    expected_ouput = contract.functions.round().call() + 1
+    expected_output = contract.functions.round().call() + 1
 
     # Generate actual output
     score = 1
@@ -54,13 +53,13 @@ def test_round(web3, contract, owner, user):
     output = contract.functions.round().call()
 
     # Test
-    assert output == expected_ouput
+    assert output == expected_output
 
 
 def test_user_balance(web3, contract, owner, user):
     # Formulate expected output
     jackpot = contract.functions.jackpot().call()
-    expected_ouput = web3.eth.getBalance(user.address) + jackpot
+    expected_output = web3.eth.getBalance(user.address) + jackpot
 
     # Generate actual output
     score = 1
@@ -69,13 +68,13 @@ def test_user_balance(web3, contract, owner, user):
     output = web3.eth.getBalance(user.address) + gas_cost  # Adjust for gas
 
     # Test
-    assert output == expected_ouput
+    assert output == expected_output
 
 
 def test_contract_balance(web3, contract, owner, user):
     # Formulate expected output
     jackpot = contract.functions.jackpot().call()
-    expected_ouput = web3.eth.getBalance(contract.address) - jackpot
+    expected_output = web3.eth.getBalance(contract.address) - jackpot
 
     # Generate actual output
     score = 1
@@ -84,7 +83,7 @@ def test_contract_balance(web3, contract, owner, user):
     output = web3.eth.getBalance(contract.address)
 
     # Test
-    assert output == expected_ouput
+    assert output == expected_output
 
 
 def test_signer_is_not_owner(web3, contract, user2, user):
