@@ -14,7 +14,7 @@ contract Arcade {
     uint256 public highscore;
     uint256 public price;
     uint256 public round;
-    mapping (address => uint256) public nonces;
+    mapping (address => bytes32) public nonces;
 
     function Arcade() public {
         // Set initial values
@@ -22,21 +22,21 @@ contract Arcade {
         // Fees are set to 10% (~$0.03 cent on $0.25 payments)
         highscore = 0;
         jackpot = 0;
-        round = 0;
+        round = 1;
         price = 1000000000000000; // 0.001 ETH
         owner = msg.sender;
     }
 
     /// @dev Function called by user to pay service and be able to play in this round
     /// @dev User must pay an amount equal to the variable price
-    function pay(uint256 nonce) public payable {
+    function pay(bytes32 nonce) public payable {
         require(msg.value == price);
         nonces[msg.sender] = nonce;
         jackpot = jackpot.add(msg.value);
     }
 
-    function getNonce() public view returns (uint256) {
-        return nonces[msg.sender];
+    function getNonce(address addr) public view returns (bytes32) {
+        return nonces[addr];
     }
 
     /// @dev Function for a user to upload their highscore
