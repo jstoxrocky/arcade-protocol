@@ -5,8 +5,8 @@ import json
 this = os.path.dirname(__file__)
 tests = os.path.join(this, '..')
 base = os.path.abspath(os.path.join(tests, '..'))
-integration_tests_json = os.path.join(base, 'integration-json-fixtures')
-constants_dir = os.path.join(integration_tests_json, 'constants')
+integration_json_fixtures = os.path.join(base, 'integration-json-fixtures')
+constants_dir = os.path.join(integration_json_fixtures, 'constants')
 
 
 def test_contract_has_code(web3, arcade_contract):

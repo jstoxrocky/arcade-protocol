@@ -5,6 +5,9 @@ from web3.utils.transactions import (
 from eth_tester.exceptions import (
     TransactionFailed,
 )
+from eth_utils import (
+    keccak,
+)
 
 
 def pay(web3, contract, user, price, nonce):
@@ -22,7 +25,7 @@ def test_pay_success(web3, contract, user):
     """
     It should succeed with a jackpot increased by `price` and an updated nonce
     """
-    nonce = 1234
+    nonce = keccak(b'')
     price = contract.functions.price().call()
     jackpot = contract.functions.jackpot().call()
     expected_nonce = nonce
@@ -30,7 +33,7 @@ def test_pay_success(web3, contract, user):
 
     pay(web3, contract, user.address, price, nonce)
     output_jackpot = contract.functions.jackpot().call()
-    output_nonce = contract.functions.getNonce().call({'from': user.address})
+    output_nonce = contract.functions.getNonce(user.address).call()
 
     assert output_nonce == expected_nonce
     assert output_jackpot == exected_jackpot
@@ -40,7 +43,7 @@ def test_pay_incorrect_price(web3, contract, user):
     """
     It should fail
     """
-    nonce = 1234
+    nonce = keccak(b'')
     price = price = contract.functions.price().call() - 1
     with pytest.raises(TransactionFailed):
         pay(web3, contract, user.address, price, nonce)

@@ -7,6 +7,15 @@ def test_contract_initial_highscore(web3, contract):
     assert output == expected_output
 
 
+def test_contract_initial_round(web3, contract):
+    """
+    It should be equal to zero
+    """
+    expected_output = 1
+    output = contract.functions.round().call()
+    assert output == expected_output
+
+
 def test_contract_initial_jackpot(web3, contract):
     """
     It should be equal to zero
