@@ -38,6 +38,6 @@ def test_contract_price(web3, contract, owner, user):
     """
     It should be equal to 1000000000000000 (0.001 ETH)
     """
-    expected_output = 1000000000000000
+    expected_output = 100000000000000
     output = contract.functions.price().call()
     assert output == expected_output
