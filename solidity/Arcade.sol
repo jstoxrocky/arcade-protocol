@@ -41,7 +41,7 @@ contract Arcade {
     }
 
     /// @dev Submit highscore
-    /// @dev Do not accept scores that are not signe dby 0x2048 game server
+    /// @dev Do not accept scores that are not signed by 0x2048 game server
     /// @dev Do not accept scores less than or equal to the current highscore
     /// @dev Replace the highscore with the submitted score
     /// @dev Increase the round
@@ -64,7 +64,7 @@ contract Arcade {
         bytes32 messageHash = keccak256(preamble, keccak256(this, user, score));
         address signer = ecrecover(messageHash, v, r, s);
         require(signer == owner);
-        // User must have gotten higher than highscore
+        // User must have scored higher than highscore
         require(score > highscore);
         // Send jackpot to address included in hashed-signed message
         // Reset jackpot

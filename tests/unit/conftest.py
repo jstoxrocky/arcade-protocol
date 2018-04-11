@@ -1,7 +1,6 @@
 import pytest
 import json
 from eth_utils import (
-    pad_left,
     int_to_big_endian,
 )
 from web3 import (
@@ -15,9 +14,6 @@ from solc import (
     compile_files,
 )
 import os
-from web3.utils.transactions import (
-    wait_for_transaction_receipt,
-)
 from contracts import (
     CONTRACTS_DIR,
 )
@@ -26,7 +22,7 @@ from contracts import (
 num_accounts = 3
 accounts = []
 for i in range(1, num_accounts + 1):
-    pk_bytes = pad_left(int_to_big_endian(i), 32, b'\x00')
+    pk_bytes = int_to_big_endian(i).rjust(32, b'\x00')
     account = Account.privateKeyToAccount(pk_bytes)
     accounts.append(account)
 
@@ -84,8 +80,8 @@ def Contract(web3):
 
 @pytest.fixture(scope="function")
 def contract(web3, Contract, owner):
-    deploy_txn = Contract.deploy({'from': owner.address})
-    deploy_receipt = wait_for_transaction_receipt(web3, deploy_txn)
+    deploy_txn = Contract.constructor().transact({'from': owner.address})
+    deploy_receipt = web3.eth.waitForTransactionReceipt(deploy_txn)
     assert deploy_receipt is not None
     contract = Contract(address=deploy_receipt['contractAddress'])
     assert owner.address == contract.functions.owner().call()
