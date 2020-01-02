@@ -18,15 +18,22 @@ The contracts are found in `solidity/contracts`. This directory contains two con
 
 ```bash
 $ pip install -r requirements.txt
-$ python -m solc.install v0.4.19
-$ export SOLC_BINARY=$HOME/.py-solc/solc-v0.4.19/bin/solc
-$ export LD_LIBRARY_PATH=$HOME/.py-solc/solc-v0.4.19/bin
 ```
+
+Then follow instructions online to install solc. You can do this with homebrew.
 
 ## Test
 
-Clone the repository
+Clone the repository. The Python wrapper around the solc compiler (py-solc) is deprecated. For this reason we run solc manually each time a change to the contract is made.
 
 ```bash
+$ solc --combined-json abi,bin,bin-runtime -o bin --overwrite solidity/Arcade.sol
 $ pytest
+$ flake8
 ```
+
+## Further Notes
+"EIP-191 version 'E' is pretty broken, don't encourage its use": https://github.com
+/ethereum/eth-account/commit/e4e2a8978fef90097f569e149c6a7010e3f45a98#diff-a9c6ca5d3c0ddc6c626bcee1142503c9
+
+For this reasons the "Ethereum Signed Message" preamble is removed from Python and Solidity code.

@@ -1,5 +1,5 @@
 import pytest
-from web3.utils.transactions import (
+from web3._utils.transactions import (
     wait_for_transaction_receipt,
 )
 from eth_tester.exceptions import (
@@ -14,7 +14,12 @@ def pay(web3, contract, user, price, nonce):
     txhash = contract.functions.pay(
         nonce,
     ).transact({'from': user, 'value': price})
-    txn_receipt = wait_for_transaction_receipt(web3, txhash)
+    txn_receipt = wait_for_transaction_receipt(
+        web3,
+        txhash,
+        timeout=120,
+        poll_latency=0.1
+    )
     assert txn_receipt is not None
     tx = web3.eth.getTransaction(txhash)
     gas_cost = tx['gasPrice'] * txn_receipt['gasUsed']
