@@ -10,12 +10,9 @@ from web3 import (
 from web3.providers.eth_tester import (
     EthereumTesterProvider,
 )
-from solc import (
-    compile_files,
-)
 import os
 from contracts import (
-    CONTRACTS_DIR,
+    BIN_DIR,
 )
 
 
@@ -54,23 +51,22 @@ def user2(web3):
     return account
 
 
-def compile(filepath, contract_name, allow_paths=None):
-    compilation = compile_files(
-        [filepath],
-        allow_paths=allow_paths,
-    )
-    compilation = compilation[filepath + ":" + contract_name]
-    abi = json.dumps(compilation['abi'])
-    bytecode = compilation['bin']
-    bytecode_runtime = compilation['bin-runtime']
+def compile():
+    filepath = os.path.join(BIN_DIR, "combined.json")
+    with open(filepath) as f:
+        compiled_artifacts = json.load(f)
+
+    data = compiled_artifacts["contracts"]["solidity/Arcade.sol:Arcade"]
+    abi = data["abi"]
+    bytecode = data["bin"]
+    bytecode_runtime = data["bin-runtime"]
+
     return abi, bytecode, bytecode_runtime
 
 
 @pytest.fixture(scope="module")
 def Contract(web3):
-    filepath = os.path.join(CONTRACTS_DIR, "Arcade.sol")
-    contract_name = 'Arcade'
-    abi, code, code_runtime = compile(filepath, contract_name)
+    abi, code, code_runtime = compile()
     return web3.eth.contract(
         abi=abi,
         bytecode=code,

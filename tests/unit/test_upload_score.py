@@ -1,5 +1,5 @@
 import pytest
-from web3.utils.transactions import (
+from web3._utils.transactions import (
     wait_for_transaction_receipt,
 )
 from eth_tester.exceptions import (
@@ -21,7 +21,12 @@ def upload_score(web3, signed, contract, user, score):
         user,
         score,
     ).transact({'from': user})
-    txn_receipt = wait_for_transaction_receipt(web3, txhash)
+    txn_receipt = wait_for_transaction_receipt(
+        web3,
+        txhash,
+        timeout=120,
+        poll_latency=0.1
+    )
     assert txn_receipt is not None
     tx = web3.eth.getTransaction(txhash)
     gas_cost = tx['gasPrice'] * txn_receipt['gasUsed']
@@ -34,7 +39,7 @@ def test_jackpot(web3, contract, owner, user):
 
     # Generate actual output
     score = 1
-    signed = sign(owner.privateKey, contract.address, user.address, score)
+    signed = sign(owner.key, contract.address, user.address, score)
     upload_score(web3, signed, contract, user.address, score)
     output = contract.functions.jackpot().call()
 
