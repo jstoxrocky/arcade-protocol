@@ -79,7 +79,9 @@ contract Arcade {
         // could upload scores to multiple versions of the contract - potentially claiming
         // the jackpot from a contract they weren't intended to access. Including `this` in the
         // signed message requires submissions to be intended to be used with this exact contract.
-        bytes32 messageHash = keccak256(abi.encodePacked(this, user, score));
+
+        // EIP 191 Version 0
+        bytes32 messageHash = keccak256(abi.encodePacked(byte(0x19), byte(0), address(this), user, score));
         address signer = ecrecover(messageHash, v, r, s);
         require(signer == owner, "Signer not Arcade");
 
