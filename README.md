@@ -19,6 +19,14 @@ The contracts are found in `solidity/contracts`. This directory contains two con
 ```bash
 $ pip install -r requirements.txt
 ```
+If you ever need to install any dependencies manually, web3 must be installed like:
+
+```bash
+$ pip install web3\[tester\]
+```
+
+Or the tests will not pass. The backslashes are needed if you are using Zsh.
+
 
 Then follow instructions online to install solc. You can do this with homebrew.
 
