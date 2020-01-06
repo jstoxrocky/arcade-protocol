@@ -1,8 +1,5 @@
 import pytest
 import json
-from eth_utils import (
-    int_to_big_endian,
-)
 from web3 import (
     Web3,
     Account,
@@ -14,14 +11,21 @@ import os
 from contracts import (
     BIN_DIR,
 )
+from eth_utils import (
+    int_to_big_endian,
+)
 
 
-num_accounts = 3
-accounts = []
-for i in range(1, num_accounts + 1):
+# The ten default accounts added are the ones with
+# private keys equal to the first 10 digits. If this ever changes
+# just do this:
+# provider = EthereumTesterProvider()
+# t = provider.ethereum_tester
+# t.add_account(private_key)
+def int_to_test_account(i):
     pk_bytes = int_to_big_endian(i).rjust(32, b'\x00')
     account = Account.from_key(pk_bytes)
-    accounts.append(account)
+    return account
 
 
 @pytest.fixture(scope="module")
@@ -32,21 +36,21 @@ def web3():
 
 @pytest.fixture(scope="module")
 def owner(web3):
-    account = accounts[0]
+    account = int_to_test_account(1)
     assert web3.eth.getBalance(account.address) > 0
     return account
 
 
 @pytest.fixture(scope="module")
 def user(web3):
-    account = accounts[1]
+    account = int_to_test_account(2)
     assert web3.eth.getBalance(account.address) > 0
     return account
 
 
 @pytest.fixture(scope="module")
 def user2(web3):
-    account = accounts[2]
+    account = int_to_test_account(3)
     assert web3.eth.getBalance(account.address) > 0
     return account
 
