@@ -27,6 +27,7 @@ Then follow instructions online to install solc. You can do this with homebrew.
 Clone the repository. The Python wrapper around the solc compiler (py-solc) is deprecated. For this reason we run solc manually each time a change to the contract is made.
 
 ```bash
+$ git submodule update --init --recursive
 $ solc --combined-json abi,bin,bin-runtime -o bin --overwrite solidity/Arcade.sol
 $ pytest
 $ flake8
