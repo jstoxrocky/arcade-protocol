@@ -46,3 +46,4 @@ $ flake8
 /ethereum/eth-account/commit/e4e2a8978fef90097f569e149c6a7010e3f45a98#diff-a9c6ca5d3c0ddc6c626bcee1142503c9
 
 For this reasons the "Ethereum Signed Message" preamble is removed from Python and Solidity code.
+We use EIP 191 Version 0.

@@ -6,7 +6,7 @@ from eth_tester.exceptions import (
     TransactionFailed,
 )
 from contracts import (
-    sign,
+    sign_score,
 )
 from eth_utils import (
     int_to_big_endian,
@@ -39,7 +39,7 @@ def test_jackpot(web3, contract, owner, user):
 
     # Generate actual output
     score = 1
-    signed = sign(owner.key, contract.address, user.address, score)
+    signed = sign_score(owner.key, contract.address, user.address, score)
     upload_score(web3, signed, contract, user.address, score)
     output = contract.functions.jackpot().call()
 
@@ -53,7 +53,7 @@ def test_round(web3, contract, owner, user):
 
     # Generate actual output
     score = 1
-    signed = sign(owner.key, contract.address, user.address, score)
+    signed = sign_score(owner.key, contract.address, user.address, score)
     upload_score(web3, signed, contract, user.address, score)
     output = contract.functions.round().call()
 
@@ -68,7 +68,7 @@ def test_user_balance(web3, contract, owner, user):
 
     # Generate actual output
     score = 1
-    signed = sign(owner.key, contract.address, user.address, score)
+    signed = sign_score(owner.key, contract.address, user.address, score)
     gas_cost = upload_score(web3, signed, contract, user.address, score)
     output = web3.eth.getBalance(user.address) + gas_cost  # Adjust for gas
 
@@ -83,7 +83,7 @@ def test_contract_balance(web3, contract, owner, user):
 
     # Generate actual output
     score = 1
-    signed = sign(owner.key, contract.address, user.address, score)
+    signed = sign_score(owner.key, contract.address, user.address, score)
     upload_score(web3, signed, contract, user.address, score)
     output = web3.eth.getBalance(contract.address)
 
@@ -93,7 +93,7 @@ def test_contract_balance(web3, contract, owner, user):
 
 def test_signer_is_not_owner(web3, contract, user2, user):
     score = 1
-    signed = sign(user2.key, contract.address, user.address, score)
+    signed = sign_score(user2.key, contract.address, user.address, score)
     with pytest.raises(TransactionFailed):
         upload_score(web3, signed, contract, user.address, score)
 
@@ -101,13 +101,13 @@ def test_signer_is_not_owner(web3, contract, user2, user):
 def test_uploads_wrong_score(web3, contract, owner, user):
     score = 1
     wrong_score = 100
-    signed = sign(owner.key, contract.address, user.address, score)
+    signed = sign_score(owner.key, contract.address, user.address, score)
     with pytest.raises(TransactionFailed):
         upload_score(web3, signed, contract, user.address, wrong_score)
 
 
 def test_score_too_low(web3, contract, owner, user):
     score = 0
-    signed = sign(owner.key, contract.address, user.address, score)
+    signed = sign_score(owner.key, contract.address, user.address, score)
     with pytest.raises(TransactionFailed):
         upload_score(web3, signed, contract, user.address, score)

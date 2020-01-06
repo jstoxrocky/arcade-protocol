@@ -81,7 +81,9 @@ contract Arcade {
         // signed message requires submissions to be intended to be used with this exact contract.
 
         // EIP 191 Version 0
-        bytes32 messageHash = keccak256(abi.encodePacked(byte(0x19), byte(0), address(this), user, score));
+        bytes32 messageHash = keccak256(
+            abi.encodePacked(byte(0x19), byte(0), address(this), user, score)
+        );
         address signer = ecrecover(messageHash, v, r, s);
         require(signer == owner, "Signer not Arcade");
 
