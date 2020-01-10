@@ -1,9 +1,6 @@
 import click
 import os
 import json
-from solc import (
-    compile_files,
-)
 from web3 import (
     Web3,
     Account,
@@ -15,14 +12,14 @@ from eth_utils import (
     encode_hex,
     add_0x_prefix,
 )
-from web3.utils.abi import (
+from web3._utils.abi import (
     get_constructor_abi,
     merge_args_and_kwargs,
 )
-from web3.utils.contracts import (
+from web3._utils.contracts import (
     encode_abi,
 )
-from web3.utils.transactions import (
+from web3._utils.transactions import (
     wait_for_transaction_receipt,
 )
 
@@ -40,7 +37,7 @@ def run(filepath, contract_name, owner_envvar, chainid, force):
         click.echo('aborting deployment')
         return
     click.echo('...deploying %s to chainid %s' % (filepath, chainid))
-    abi, bytecode, bytecode_runtime = compile(filepath, contract_name)
+    abi, bytecode, bytecode_runtime = compile(filepath)
     web3 = get_provider()
     deployment_data = create_deployement_data(web3, abi, bytecode)
     owner = Account.from_key(os.environ[owner_envvar])
@@ -48,19 +45,24 @@ def run(filepath, contract_name, owner_envvar, chainid, force):
     signed_tx = Account.signTransaction(tx, owner.key)
     tx_hash = web3.eth.sendRawTransaction(signed_tx.rawTransaction)
     click.echo('transaction hash: %s' % (encode_hex(tx_hash)))
-    deploy_receipt = wait_for_transaction_receipt(web3, tx_hash)
+    deploy_receipt = wait_for_transaction_receipt(
+        web3,
+        tx_hash,
+        timeout=120,
+        poll_latency=5.0
+    )
     click.echo(deploy_receipt)
 
 
-def compile(filepath, contract_name, allow_paths=None):
-    compilation = compile_files(
-        [filepath],
-        allow_paths=allow_paths,
-    )
-    compilation = compilation[filepath + ":" + contract_name]
-    abi = json.dumps(compilation['abi'])
-    bytecode = compilation['bin']
-    bytecode_runtime = compilation['bin-runtime']
+def compile(filepath):
+    with open(filepath) as f:
+        compiled_artifacts = json.load(f)
+
+    data = compiled_artifacts["contracts"]["solidity/Arcade.sol:Arcade"]
+    abi = data["abi"]
+    bytecode = data["bin"]
+    bytecode_runtime = data["bin-runtime"]
+
     return abi, bytecode, bytecode_runtime
 
 
@@ -82,9 +84,12 @@ def create_deployement_data(web3, abi, bytecode):
 
 
 def create_transaction(web3, owner, deployment_data):
+    # eth gas station fast price in gwei 01/10/20202
+    recommended_gas_price_gwei = 8
+    recommended_gas_price = Web3.toWei(recommended_gas_price_gwei, 'gwei')
     tx = {
         'gas': 3000000,
-        'gasPrice': 200000000,
+        'gasPrice': recommended_gas_price,
         'nonce': web3.eth.getTransactionCount(owner.address),
         'data': deployment_data,
         'chainId': None,
