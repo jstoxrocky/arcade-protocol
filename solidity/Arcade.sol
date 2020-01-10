@@ -87,7 +87,8 @@ contract Arcade {
         address signer = ecrecover(messageHash, v, r, s);
         require(signer == owner, "Signer not Arcade");
 
-        // User must have scored higher than highscore
+        // User must have scored higher than highscore.
+        // This must be greater-than to prevent replay attacks.
         require(score > highscore, "Score not greater than Highscore");
         // Send jackpot to address included in hashed-signed message
         // Reset jackpot

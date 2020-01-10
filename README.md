@@ -41,6 +41,11 @@ $ pytest
 $ flake8
 ```
 
+## Deploy to Rinkeby
+```bash
+python scripts/deploy.py path_to/contracts/bin/combined.json Arcade PRIVATE_KEY_0x2048 --chainid=4
+```
+
 ## Further Notes
 "EIP-191 version 'E' is pretty broken, don't encourage its use": https://github.com
 /ethereum/eth-account/commit/e4e2a8978fef90097f569e149c6a7010e3f45a98#diff-a9c6ca5d3c0ddc6c626bcee1142503c9
