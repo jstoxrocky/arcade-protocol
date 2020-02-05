@@ -80,10 +80,18 @@ contract Arcade {
         // the jackpot from a contract they weren't intended to access. Including `this` in the
         // signed message requires submissions to be intended to be used with this exact contract.
 
-        // EIP 191 Version 0
-        bytes32 messageHash = keccak256(
-            abi.encodePacked(byte(0x19), byte(0), address(this), user, score)
+        // EIP 191 Version 1
+        // EIP 712
+        uint256 version = 1;
+        bytes32 domainTypeHash = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
+        bytes32 domainSeparator = keccak256(
+            abi.encode(domainTypeHash, keccak256("0x2048"), keccak256("1"), version, address(this))
         );
+        bytes32 highscoreTypeHash = keccak256("Highscore(address user,uint256 score)");
+        bytes32 hashStruct = keccak256(
+            abi.encode(highscoreTypeHash, user, score)
+        );
+        bytes32 messageHash = keccak256(abi.encodePacked(byte(0x19), byte(0x01), domainSeparator, hashStruct));
         address signer = ecrecover(messageHash, v, r, s);
         require(signer == owner, "Signer not Arcade");
 
