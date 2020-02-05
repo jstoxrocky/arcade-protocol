@@ -6,10 +6,7 @@ from toolz.dicttoolz import (
     valmap,
 )
 from eth_account.messages import (
-    encode_intended_validator,
-)
-from eth_abi.packed import (
-    encode_abi_packed,
+    encode_structured_data,
 )
 
 
@@ -20,16 +17,39 @@ CONTRACTS_DIR = os.path.join(_outer_dir_abs, 'solidity')
 BIN_DIR = os.path.join(_outer_dir_abs, 'bin')
 
 
+structured_highscore = {
+    "types": {
+        "EIP712Domain": [
+            {"name": "name", "type": "string"},
+            {"name": "version", "type": "string"},
+            {"name": "chainId", "type": "uint256"},
+            {"name": "verifyingContract", "type": "address"}
+        ],
+        "Highscore": [
+            {"name": "user", "type": "address"},
+            {"name": "score", "type": "uint256"}
+        ],
+    },
+    "primaryType": "Highscore",
+    "domain": {
+        "name": "0x2048",
+        "version": "1",
+        "chainId": 1,
+    },
+}
+
+
 def sign_score(private_key, contract, user, score):
-    abi_types = ['address', 'uint256']
-    values = [user, score]
-    message = encode_abi_packed(abi_types, values)
-    eip191_message = encode_intended_validator(
-        validator_address=contract,
-        primitive=message,
+    structured_highscore["message"] = {
+        "user": user,
+        "score": score,
+    }
+    structured_highscore["domain"]["verifyingContract"] = contract
+    structured_msg = encode_structured_data(
+        primitive=structured_highscore,
     )
     # sign_message passes data through
     # eth_account.messages._hash_eip191_message which is keccak256
-    signed = Account.sign_message(eip191_message, private_key)
+    signed = Account.sign_message(structured_msg, private_key)
     signed = valmap(lambda x: x.hex() if isinstance(x, bytes) else x, signed)
     return signed
