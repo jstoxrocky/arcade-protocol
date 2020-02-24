@@ -50,46 +50,53 @@ contract Arcade {
     /// @param v Signature parameter
     /// @param r Signature parameter
     /// @param s Signature parameter
-    /// @param user Pre-keccak256 user address
     /// @param score Pre-keccak256 score
     function uploadScore(
         uint8 v,
         bytes32 r,
         bytes32 s,
-        address payable user,
         uint256 score
     ) public {
-        // The user uploads their score and own address to verify that these are
-        // the values that the contract will actually use (and also to provide the code
-        // access to these values after signature verification).
-        // The user also uploads the v/r/s signature given by the Arcade server.
-        // This v/r/s signature is expected to be the hashed and signed combination of
-        // the contract's address, user's address, and score. The signer is the Arcade server.
-        // The code below, rehashes these values together, uses the v/r/s signature in combination
-        // with this hash to verify that the signature does indeed come from the Arcade server.
-        // Next, the score is checked to ensure that it is not greater
-        // than the current highscore.
-        // If these checks pass, the highscore is updated and the value of the jackpot is
-        // transferred to the user.
+        // The user uploads their score along with the signature
+        // from the Arcade server. Since the user's address forms part
+        // of the signature, it is necessary that the user who paid the
+        // Arcade server be the one to transact to this method.
 
-        // Verify signer
-        // `this` (the contract's address) is included here less as an immediate
-        // security measure and more as a future proofing premptive security measure. If, in
-        // the future, there is another Arcade contract (maybe a revised version etc.), user's
-        // could upload scores to multiple versions of the contract - potentially claiming
-        // the jackpot from a contract they weren't intended to access. Including `this` in the
-        // signed message requires submissions to be intended to be used with this exact contract.
+        // Although the signing account is owned by the Arcade, it is
+        // necessary to follow the preventative measure against replay-attacks
+        // outlined in EIPs 191 and 712. Preventing Ethereum transactions from
+        // being signed (Geth PR 2940, EIP 191, EIP 712) is not necessarily a
+        // concern here since the signing account controlled by the Arcade.
+        // Likewise, EIP 712's strict guidelines for encoding an arbitrary
+        // structured message to bytes is not necessarily a concern either
+        // since the Arcade again controls the signing logic. However, since
+        // the only downside to added these security measures is an increase
+        // in gas to power the method, and the method is executed by the user,
+        // it is easier to not "roll our own crypto" here and just use EIP 712's
+        // guidelines for signing.
 
-        // EIP 191 Version 1
-        // EIP 712
-        uint256 version = 1;
-        bytes32 domainTypeHash = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
+        // After the signer is verified to be the Arcade server the
+        // score is checked to ensure that it is not greater than the
+        // current highscore. If these checks pass, the highscore is
+        // updated and the value of the jackpot is transferred to the message
+        // sender.
+
+        // EIP 191 Version 1 (EIP 712)
+        //      domainTypeHash = keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)');
+        bytes32 domainTypeHash = 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f;
+        //      name = keccak256('0x2048')
+        bytes32 name = 0xa7fc84919e7612cb73ee05a72c871940b9845869baf1a644b713770b676b2525;
+        //      version = keccak256('1.0')
+        bytes32 version = 0xe6bbd6277e1bf288eed5e8d1780f9a50b239e86b153736bceebccf4ea79d90b3;
+        uint256 chainId = 1;
+        address validator = address(this);
         bytes32 domainSeparator = keccak256(
-            abi.encode(domainTypeHash, keccak256("0x2048"), keccak256("1"), version, address(this))
+            abi.encode(domainTypeHash, name, version, chainId, validator)
         );
-        bytes32 highscoreTypeHash = keccak256("Highscore(address user,uint256 score)");
+        //      highscoreTypeHash = keccak256('Highscore(address user,uint256 score)');
+        bytes32 highscoreTypeHash = 0x49d8d27ca6ea49c11b929c6f196a934d26e531707cc4be78256fee34a5ba8889;
         bytes32 hashStruct = keccak256(
-            abi.encode(highscoreTypeHash, user, score)
+            abi.encode(highscoreTypeHash, msg.sender, score)
         );
         bytes32 messageHash = keccak256(abi.encodePacked(byte(0x19), byte(0x01), domainSeparator, hashStruct));
         address signer = ecrecover(messageHash, v, r, s);
@@ -104,6 +111,6 @@ contract Arcade {
         round = round.add(1);
         uint256 currentJackpot = jackpot;
         jackpot = 0;
-        user.transfer(currentJackpot);
+        msg.sender.transfer(currentJackpot);
     }
 }
