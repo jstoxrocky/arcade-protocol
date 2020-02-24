@@ -18,7 +18,6 @@ def upload_score(web3, signed, contract, user, score):
         signed['v'],
         int_to_big_endian(signed['r']),
         int_to_big_endian(signed['s']),
-        user,
         score,
     ).transact({'from': user})
     txn_receipt = wait_for_transaction_receipt(
@@ -94,6 +93,13 @@ def test_contract_balance(web3, contract, owner, user):
 def test_signer_is_not_owner(web3, contract, user2, user):
     score = 1
     signed = sign_score(user2.key, contract.address, user.address, score)
+    with pytest.raises(TransactionFailed):
+        upload_score(web3, signed, contract, user.address, score)
+
+
+def test_user_is_not_signed_user(web3, contract, owner, user, user2):
+    score = 1
+    signed = sign_score(owner.key, contract.address, user2.address, score)
     with pytest.raises(TransactionFailed):
         upload_score(web3, signed, contract, user.address, score)
 

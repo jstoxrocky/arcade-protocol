@@ -33,7 +33,7 @@ structured_highscore = {
     "primaryType": "Highscore",
     "domain": {
         "name": "0x2048",
-        "version": "1",
+        "version": "1.0",
         "chainId": 1,
     },
 }
