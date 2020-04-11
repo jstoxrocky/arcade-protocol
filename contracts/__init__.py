@@ -27,7 +27,8 @@ structured_highscore = {
         ],
         "Highscore": [
             {"name": "user", "type": "address"},
-            {"name": "score", "type": "uint256"}
+            {"name": "score", "type": "uint256"},
+            {"name": "gameId", "type": "bytes32"}
         ],
     },
     "primaryType": "Highscore",
@@ -39,10 +40,11 @@ structured_highscore = {
 }
 
 
-def sign_score(private_key, contract, user, score):
+def sign_score(private_key, contract, user, score, game_id):
     structured_highscore["message"] = {
         "user": user,
         "score": score,
+        "gameId": game_id,
     }
     structured_highscore["domain"]["verifyingContract"] = contract
     structured_msg = encode_structured_data(

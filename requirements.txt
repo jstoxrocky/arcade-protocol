@@ -8,7 +8,7 @@ Click==7.0
 cytoolz==0.10.1
 entrypoints==0.3
 eth-abi==2.1.0
-eth-account==0.4.0
+git+https://github.com/jstoxrocky/eth-account.git@jms/encode_structured_data_with_bytes32
 eth-bloom==1.0.3
 eth-hash==0.2.0
 eth-keyfile==0.5.1
