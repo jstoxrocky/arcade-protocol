@@ -67,9 +67,12 @@ def compile(filepath):
 
 
 def get_provider():
-    infura_token = os.environ['INFURA_ACCESS_TOKEN']
-    provider = HTTPProvider('https://rinkeby.infura.io/%s' % (infura_token))
-    return Web3(provider)
+    INFURA_PROJECT_ID = os.environ['INFURA_PROJECT_ID']
+    INFURA_PROJECT_SECRET = os.environ['INFURA_PROJECT_SECRET']
+    headers = {"auth": ("", INFURA_PROJECT_SECRET)}
+    uri = 'https://ropsten.infura.io/v3/%s' % (INFURA_PROJECT_ID)
+    web3 = Web3(HTTPProvider(uri, headers))
+    return web3
 
 
 def create_deployement_data(web3, abi, bytecode):

@@ -34,7 +34,7 @@ contract Arcade {
     function pay(bytes32 gameId, bytes32 paymentCode) public payable {
         require(msg.value == price, "Value not equal to price");
         paymentCodes[gameId][msg.sender] = paymentCode;
-        jackpots[gameId] += msg.value;
+        jackpots[gameId] = jackpots[gameId].add(msg.value);
     }
 
     function uploadScore(
