@@ -1,18 +1,15 @@
+from eth_utils import (
+    keccak,
+)
+
+
 def test_contract_initial_highscore(web3, contract):
     """
     It should be equal to zero
     """
+    game_id = keccak(text='ABC')
     expected_output = 0
-    output = contract.functions.highscore().call()
-    assert output == expected_output
-
-
-def test_contract_initial_round(web3, contract):
-    """
-    It should be equal to zero
-    """
-    expected_output = 1
-    output = contract.functions.round().call()
+    output = contract.functions.getHighscore(game_id).call()
     assert output == expected_output
 
 
@@ -20,8 +17,9 @@ def test_contract_initial_jackpot(web3, contract):
     """
     It should be equal to zero
     """
+    game_id = keccak(text='ABC')
     expected_output = 0
-    output = contract.functions.jackpot().call()
+    output = contract.functions.getJackpot(game_id).call()
     assert output == expected_output
 
 
