@@ -1,241 +1,150 @@
-import pytest
-from web3._utils.transactions import (
-    wait_for_transaction_receipt,
-)
-from eth_tester.exceptions import (
-    TransactionFailed,
-)
-from contracts import (
+from scripts.sign import (
     sign_score,
 )
-from eth_utils import (
-    int_to_big_endian,
-)
-from eth_utils import (
-    keccak,
+from hexbytes import (
+    HexBytes,
 )
 
 
-def add_game(web3, contract, from_address, game_id, price):
-    txhash = contract.functions.addGame(
-        game_id,
-        price,
-    ).transact({'from': from_address})
-    txn_receipt = wait_for_transaction_receipt(
-        web3,
-        txhash,
-        timeout=120,
-        poll_latency=0.1
-    )
-    assert txn_receipt is not None
-    tx = web3.eth.getTransaction(txhash)
-    gas_cost = tx['gasPrice'] * txn_receipt['gasUsed']
-    return gas_cost
+GAME_ID = '0x240e634ba82fa510c7e25243cc95d456bb1b6c11ef8c695ddd555eb5cd443f74'
+PRICE = 100000000000000  # 0.0001 ETH
+SCORE = 1
 
 
-def claim(web3, signed, contract, from_address, score, game_id):
-    txhash = contract.functions.claim(
-        game_id,
-        score,
-        signed['v'],
-        int_to_big_endian(signed['r']),
-        int_to_big_endian(signed['s']),
-    ).transact({'from': from_address})
-    txn_receipt = wait_for_transaction_receipt(
-        web3,
-        txhash,
-        timeout=120,
-        poll_latency=0.1
-    )
-    assert txn_receipt is not None
-    tx = web3.eth.getTransaction(txhash)
-    gas_cost = tx['gasPrice'] * txn_receipt['gasUsed']
-    return gas_cost
+def test_jackpot(contract, owner, user):
+    contract.add_game(GAME_ID, PRICE, from_addr=owner)
 
-
-def test_jackpot(web3, contract, owner, user):
-    price = 100000000000000  # 0.0001 ETH
-    game_id = keccak(text='ABC')
-    add_game(web3, contract, owner.address, game_id, price)
-
-    expected_output = 0
-    score = 1
-    signed = sign_score(
-        owner.key,
-        contract.address,
-        user.address,
-        score,
-        game_id,
-    )
-    claim(web3, signed, contract, user.address, score, game_id)
-    output = contract.functions.getJackpot(game_id).call()
-
-    assert output == expected_output
+    expected_jackpot = 0
+    params = {
+        'game_id': HexBytes(GAME_ID),
+        'user': user.address,
+        'score': SCORE,
+        'contract': contract.address,
+    }
+    vrs = sign_score(owner.key, params)
+    receipt = contract.claim(GAME_ID, SCORE, vrs, from_addr=user)
+    assert receipt['status'] == 1
+    jackpot = contract.get_jackpot(GAME_ID)
+    assert jackpot == expected_jackpot
 
 
 def test_user_balance(web3, contract, owner, user):
-    price = 100000000000000  # 0.0001 ETH
-    game_id = keccak(text='ABC')
-    add_game(web3, contract, owner.address, game_id, price)
+    contract.add_game(GAME_ID, PRICE, from_addr=owner)
 
-    jackpot = contract.functions.getJackpot(game_id).call()
-    expected_output = web3.eth.getBalance(user.address) + jackpot
-    score = 1
-    signed = sign_score(
-        owner.key,
-        contract.address,
-        user.address,
-        score,
-        game_id,
-    )
-    gas_cost = claim(
-        web3,
-        signed,
-        contract,
-        user.address,
-        score,
-        game_id,
-    )
-    output = web3.eth.getBalance(user.address) + gas_cost  # Adjust for gas
-
-    # Test
-    assert output == expected_output
+    jackpot = contract.get_jackpot(GAME_ID)
+    expected_balance = web3.eth.getBalance(user.address) + jackpot
+    params = {
+        'game_id': HexBytes(GAME_ID),
+        'user': user.address,
+        'score': SCORE,
+        'contract': contract.address,
+    }
+    vrs = sign_score(owner.key, params)
+    receipt = contract.claim(GAME_ID, SCORE, vrs, from_addr=user)
+    assert receipt['status'] == 1
+    gas_cost = receipt['gasPrice'] * receipt['gasUsed']
+    balance = web3.eth.getBalance(user.address) + gas_cost  # Adjust for gas
+    assert balance == expected_balance
 
 
 def test_contract_balance(web3, contract, owner, user):
-    price = 100000000000000  # 0.0001 ETH
-    game_id = keccak(text='ABC')
-    add_game(web3, contract, owner.address, game_id, price)
+    contract.add_game(GAME_ID, PRICE, from_addr=owner)
 
-    jackpot = contract.functions.getJackpot(game_id).call()
-    expected_output = web3.eth.getBalance(contract.address) - jackpot
-    score = 1
-    signed = sign_score(
-        owner.key,
-        contract.address,
-        user.address,
-        score,
-        game_id,
-    )
-    claim(web3, signed, contract, user.address, score, game_id)
-    output = web3.eth.getBalance(contract.address)
-
-    # Test
-    assert output == expected_output
+    jackpot = contract.get_jackpot(GAME_ID)
+    expected_balance = web3.eth.getBalance(contract.address) - jackpot
+    params = {
+        'game_id': HexBytes(GAME_ID),
+        'user': user.address,
+        'score': SCORE,
+        'contract': contract.address,
+    }
+    vrs = sign_score(owner.key, params)
+    receipt = contract.claim(GAME_ID, SCORE, vrs, from_addr=user)
+    assert receipt['status'] == 1
+    balance = web3.eth.getBalance(contract.address)
+    assert balance == expected_balance
 
 
-def test_signer_is_not_owner(web3, contract, owner, user2, user):
-    price = 100000000000000  # 0.0001 ETH
-    game_id = keccak(text='ABC')
-    add_game(web3, contract, owner.address, game_id, price)
+def test_signer_is_not_owner(contract, owner, user):
+    contract.add_game(GAME_ID, PRICE, from_addr=owner)
 
-    score = 1
-    signed = sign_score(
-        user2.key,
-        contract.address,
-        user.address,
-        score,
-        game_id,
-    )
-    with pytest.raises(TransactionFailed):
-        claim(web3, signed, contract, user.address, score, game_id)
+    params = {
+        'game_id': HexBytes(GAME_ID),
+        'user': user.address,
+        'score': SCORE,
+        'contract': contract.address,
+    }
+    vrs = sign_score(user.key, params)
+    receipt = contract.claim(GAME_ID, SCORE, vrs, from_addr=user)
+    assert receipt['status'] == 0
 
 
-def test_user_is_not_signed_user(web3, contract, owner, user, user2):
-    price = 100000000000000  # 0.0001 ETH
-    game_id = keccak(text='ABC')
-    add_game(web3, contract, owner.address, game_id, price)
+def test_user_is_not_signed_user(contract, owner, user, user2):
+    contract.add_game(GAME_ID, PRICE, from_addr=owner)
 
-    game_id = keccak(text='ABC')
-    score = 1
-    signed = sign_score(
-        owner.key,
-        contract.address,
-        user2.address,
-        score,
-        game_id,
-    )
-    with pytest.raises(TransactionFailed):
-        claim(web3, signed, contract, user.address, score, game_id)
+    params = {
+        'game_id': HexBytes(GAME_ID),
+        'user': user2.address,
+        'score': SCORE,
+        'contract': contract.address,
+    }
+    vrs = sign_score(owner.key, params)
+    receipt = contract.claim(GAME_ID, SCORE, vrs, from_addr=user)
+    assert receipt['status'] == 0
 
 
 def test_uploads_wrong_score(web3, contract, owner, user):
-    price = 100000000000000  # 0.0001 ETH
-    game_id = keccak(text='ABC')
-    add_game(web3, contract, owner.address, game_id, price)
+    contract.add_game(GAME_ID, PRICE, from_addr=owner)
 
-    score = 1
-    wrong_score = 100
-    signed = sign_score(
-        owner.key,
-        contract.address,
-        user.address,
-        score,
-        game_id,
-    )
-    with pytest.raises(TransactionFailed):
-        claim(
-            web3,
-            signed,
-            contract,
-            user.address,
-            wrong_score,
-            game_id,
-        )
+    params = {
+        'game_id': HexBytes(GAME_ID),
+        'user': user.address,
+        'score': SCORE,
+        'contract': contract.address,
+    }
+    vrs = sign_score(owner.key, params)
+    bad_score = SCORE + 1
+    receipt = contract.claim(GAME_ID, bad_score, vrs, from_addr=user)
+    assert receipt['status'] == 0
 
 
-def test_score_too_low(web3, contract, owner, user):
-    price = 100000000000000  # 0.0001 ETH
-    game_id = keccak(text='ABC')
-    add_game(web3, contract, owner.address, game_id, price)
+def test_score_too_low(contract, owner, user):
+    contract.add_game(GAME_ID, PRICE, from_addr=owner)
 
-    game_id = keccak(text='ABC')
-    score = 0
-    signed = sign_score(
-        owner.key,
-        contract.address,
-        user.address,
-        score,
-        game_id,
-    )
-    with pytest.raises(TransactionFailed):
-        claim(web3, signed, contract, user.address, score, game_id)
+    low_score = 0
+    params = {
+        'game_id': HexBytes(GAME_ID),
+        'user': user.address,
+        'score': low_score,
+        'contract': contract.address,
+    }
+    vrs = sign_score(owner.key, params)
+    receipt = contract.claim(GAME_ID, low_score, vrs, from_addr=user)
+    assert receipt['status'] == 0
 
 
-def test_game_id_doesnt_match_arcade_signer(web3, contract, owner, user):
-    game_id = keccak(text='ABC')
-    wrong_game_id = keccak(text='DEF')
-    price = 100000000000000  # 0.0001 ETH
-    add_game(web3, contract, owner.address, wrong_game_id, price)
+def test_game_id_doesnt_match_arcade_signer(contract, owner, user):
+    contract.add_game(GAME_ID, PRICE, from_addr=owner)
 
-    score = 1
-    signed = sign_score(
-        owner.key,
-        contract.address,
-        user.address,
-        score,
-        game_id,
-    )
-    with pytest.raises(TransactionFailed):
-        claim(
-            web3,
-            signed,
-            contract,
-            user.address,
-            score,
-            wrong_game_id,
-        )
+    wrong_game_id = '0xf7ba25e4cb13d1cac1dffb5044ac9001438eb1251b07a484fbe3428bc825099b'  # noqa: E501
+    params = {
+        'game_id': HexBytes(GAME_ID),
+        'user': user.address,
+        'score': SCORE,
+        'contract': contract.address,
+    }
+    vrs = sign_score(owner.key, params)
+    receipt = contract.claim(wrong_game_id, SCORE, vrs, from_addr=user)
+    assert receipt['status'] == 0
 
 
-def test_game_doesnt_exist(web3, contract, owner, user):
-    game_id = keccak(text='ABC')
-    score = 1
-    signed = sign_score(
-        owner.key,
-        contract.address,
-        user.address,
-        score,
-        game_id,
-    )
-    with pytest.raises(TransactionFailed):
-        claim(web3, signed, contract, user.address, score, game_id)
+def test_game_doesnt_exist(contract, owner, user):
+    params = {
+        'game_id': HexBytes(GAME_ID),
+        'user': user.address,
+        'score': SCORE,
+        'contract': contract.address,
+    }
+    vrs = sign_score(owner.key, params)
+    receipt = contract.claim(GAME_ID, SCORE, vrs, from_addr=user)
+    assert receipt['status'] == 0
