@@ -84,5 +84,4 @@ def contract(web3, Contract, owner):
     deploy_receipt = web3.eth.waitForTransactionReceipt(deploy_txn)
     assert deploy_receipt is not None
     contract = Contract(address=deploy_receipt['contractAddress'])
-    assert owner.address == contract.functions.owner().call()
     return contract
