@@ -8,15 +8,21 @@ import "./SafeMath.sol";
 /// @author Joseph Stockermans (https://github.com/jstoxrocky)
 contract Arcade {
     using SafeMath for uint256;
-    address public owner;
-    uint256 public price;
-    mapping (bytes32 => mapping (address => bytes32)) public paymentCodes;
-    mapping (bytes32 => uint256) public highscores;
-    mapping (bytes32 => uint256) public jackpots;
+    mapping (bytes32 => address) internal owners;
+    mapping (bytes32 => uint256) internal prices;
+    mapping (bytes32 => uint256) internal highscores;
+    mapping (bytes32 => uint256) internal jackpots;
+    mapping (bytes32 => mapping (address => bytes32)) internal paymentCodes;
 
-    constructor() public {
-        price = 100000000000000; // 0.0001 ETH
-        owner = msg.sender;
+    function addGame(bytes32 gameId, uint256 price) public {
+        require(owners[gameId] == address(0), "Game ID already claimed");
+        require(price > 0, "Arcade cannot be free");
+        prices[gameId] = price;
+        owners[gameId] = msg.sender;
+    }
+
+    function getPrice(bytes32 gameId) public view returns (uint256) {
+        return prices[gameId];
     }
 
     function getPaymentCode(bytes32 gameId, address addr) public view returns (bytes32) {
@@ -31,19 +37,26 @@ contract Arcade {
         return jackpots[gameId];
     }
 
+    function getOwner(bytes32 gameId) public view returns (address) {
+        return owners[gameId];
+    }
+
     function pay(bytes32 gameId, bytes32 paymentCode) public payable {
-        require(msg.value == price, "Value not equal to price");
+        require(owners[gameId] != address(0), "Game must exist");
+        require(msg.value == prices[gameId], "Value is not equal to price");
         paymentCodes[gameId][msg.sender] = paymentCode;
         jackpots[gameId] = jackpots[gameId].add(msg.value);
     }
 
-    function uploadScore(
+    function claim(
+        bytes32 gameId,
+        uint256 score,
         uint8 v,
         bytes32 r,
-        bytes32 s,
-        uint256 score,
-        bytes32 gameId
+        bytes32 s
     ) public {
+        require(owners[gameId] != address(0), "Game must exist");
+
         // The user uploads their score along with the signature
         // from the Arcade server. Since the user's address forms part
         // of the signature, it is necessary that the user who paid the
@@ -103,11 +116,11 @@ contract Arcade {
             )
         );
         address signer = ecrecover(messageHash, v, r, s);
-        require(signer == owner, "Signer not Arcade");
+        require(signer == owners[gameId], "Signer is not game owner");
 
         // User must have scored higher than highscore.
         // This must be greater-than to prevent replay attacks.
-        require(score > highscores[gameId], "Score not greater than Highscore");
+        require(score > highscores[gameId], "Score is not greater than highscore");
         // Send jackpot to address included in hashed-signed message
         // Reset jackpot
         highscores[gameId] = score;

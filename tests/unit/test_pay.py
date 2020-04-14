@@ -10,6 +10,23 @@ from eth_utils import (
 )
 
 
+def add_game(web3, contract, from_address, game_id, price):
+    txhash = contract.functions.addGame(
+        game_id,
+        price,
+    ).transact({'from': from_address})
+    txn_receipt = wait_for_transaction_receipt(
+        web3,
+        txhash,
+        timeout=120,
+        poll_latency=0.1
+    )
+    assert txn_receipt is not None
+    tx = web3.eth.getTransaction(txhash)
+    gas_cost = tx['gasPrice'] * txn_receipt['gasUsed']
+    return gas_cost
+
+
 def pay(web3, contract, user, price, game_id, payment_code):
     txhash = contract.functions.pay(
         game_id,
@@ -28,13 +45,12 @@ def pay(web3, contract, user, price, game_id, payment_code):
 
 
 def test_pay_success(web3, contract, user):
-    """
-    It should succeed with a jackpot increased by `price` and
-    an updated payment_code
-    """
+    price = 100000000000000  # 0.0001 ETH
     game_id = keccak(text='ABC')
+    add_game(web3, contract, user.address, game_id, price)
+
     payment_code = keccak(text='123')
-    price = contract.functions.price().call()
+    price = contract.functions.getPrice(game_id).call()
     jackpot = contract.functions.getJackpot(game_id).call()
     expected_payment_code = payment_code
     exected_jackpot = jackpot + price
@@ -51,11 +67,20 @@ def test_pay_success(web3, contract, user):
 
 
 def test_pay_incorrect_price(web3, contract, user):
-    """
-    It should fail
-    """
+    price = 100000000000000  # 0.0001 ETH
     game_id = keccak(text='ABC')
+    add_game(web3, contract, user.address, game_id, price)
+
     payment_code = keccak(text='123')
-    price = price = contract.functions.price().call() - 1
+    price = contract.functions.getPrice(game_id).call() - 1
+    with pytest.raises(TransactionFailed):
+        pay(web3, contract, user.address, price, game_id, payment_code)
+
+
+def test_pay_game_does_not_exist(web3, contract, user):
+    game_id = keccak(text='ABC')
+
+    payment_code = keccak(text='123')
+    price = 0
     with pytest.raises(TransactionFailed):
         pay(web3, contract, user.address, price, game_id, payment_code)
