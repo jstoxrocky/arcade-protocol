@@ -1,99 +1,49 @@
-from eth_utils import (
-    keccak,
-)
-from hexbytes import (
-    HexBytes,
-)
-from web3._utils.transactions import (
-    wait_for_transaction_receipt,
-)
+GAME_ID = '0x240e634ba82fa510c7e25243cc95d456bb1b6c11ef8c695ddd555eb5cd443f74'
+PRICE = 100000000000000  # 0.0001 ETH
+PAYMENT_CODE = '0x64e604787cbf194841e7b68d7cd28786f6c9a0a3ab9f8b0a0e87cb4387ab0107'  # noqa: E501
 
 
-def test_initial_game_price(web3, contract):
-    """
-    It should be equal to zero
-    """
-    game_id = keccak(text='ABC')
+def test_initial_game_price(contract):
     expected_price = 0
-    price = contract.functions.getPrice(game_id).call()
+    price = contract.get_price(GAME_ID)
     assert price == expected_price
 
 
-def test_initial_payment_code(web3, contract, user):
-    """
-    It should be equal to zero
-    """
-    game_id = keccak(text='ABC')
+def test_initial_payment_code(contract, user):
     expected_payment_code = '0x0000000000000000000000000000000000000000000000000000000000000000'  # noqa: E501
-    payment_code = contract.functions.getPaymentCode(
-        game_id,
-        user.address,
-    ).call()
-    assert HexBytes(payment_code).hex() == expected_payment_code
+    payment_code = contract.get_payment_code(GAME_ID, user)
+    assert payment_code == expected_payment_code
 
 
-def test_initial_highscore(web3, contract):
-    """
-    It should be equal to zero
-    """
-    game_id = keccak(text='ABC')
+def test_initial_highscore(contract):
     expected_highscore = 0
-    highscore = contract.functions.getHighscore(game_id).call()
+    highscore = contract.get_highscore(GAME_ID)
     assert highscore == expected_highscore
 
 
-def test_initial_jackpot(web3, contract):
-    """
-    It should be equal to zero
-    """
-    game_id = keccak(text='ABC')
+def test_initial_jackpot(contract):
     expected_jackpot = 0
-    jackpot = contract.functions.getJackpot(game_id).call()
+    jackpot = contract.get_jackpot(GAME_ID)
     assert jackpot == expected_jackpot
 
 
-def test_initial_game_owner(web3, contract, user):
-    """
-    It should be equal to the test owner address
-    """
-    game_id = keccak(text='ABC')
+def test_initial_game_owner(contract):
     expected_owner = '0x0000000000000000000000000000000000000000'
-    owner = contract.functions.getOwner(game_id).call()
+    owner = contract.get_owner(GAME_ID)
     assert owner == expected_owner
 
 
-def add_game(web3, contract, from_address, game_id, price):
-    txhash = contract.functions.addGame(
-        game_id,
-        price,
-    ).transact({'from': from_address})
-    txn_receipt = wait_for_transaction_receipt(
-        web3,
-        txhash,
-        timeout=120,
-        poll_latency=0.1
-    )
-    assert txn_receipt is not None
-    tx = web3.eth.getTransaction(txhash)
-    gas_cost = tx['gasPrice'] * txn_receipt['gasUsed']
-    return gas_cost
+def test_game_price(contract, owner, user):
+    contract.add_game(GAME_ID, PRICE, from_addr=owner)
 
-
-def test_game_price(web3, contract, user):
-    price = 100000000000000  # 0.0001 ETH
-    game_id = keccak(text='ABC')
-    add_game(web3, contract, user.address, game_id, price)
-
-    expected_price = price
-    actual_price = contract.functions.getPrice(game_id).call()
+    expected_price = PRICE
+    actual_price = contract.get_price(GAME_ID)
     assert actual_price == expected_price
 
 
-def test_game_owner(web3, contract, user):
-    price = 100000000000000  # 0.0001 ETH
-    game_id = keccak(text='ABC')
-    add_game(web3, contract, user.address, game_id, price)
+def test_game_owner(contract, owner, user):
+    contract.add_game(GAME_ID, PRICE, from_addr=owner)
 
-    expected_owner = user.address
-    owner = contract.functions.getOwner(game_id).call()
+    expected_owner = owner.address
+    owner = contract.get_owner(GAME_ID)
     assert owner == expected_owner

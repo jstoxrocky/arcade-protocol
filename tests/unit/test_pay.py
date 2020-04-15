@@ -1,86 +1,36 @@
-import pytest
-from web3._utils.transactions import (
-    wait_for_transaction_receipt,
-)
-from eth_tester.exceptions import (
-    TransactionFailed,
-)
-from eth_utils import (
-    keccak,
-)
+GAME_ID = '0x240e634ba82fa510c7e25243cc95d456bb1b6c11ef8c695ddd555eb5cd443f74'
+PRICE = 100000000000000  # 0.0001 ETH
+PAYMENT_CODE = '0x64e604787cbf194841e7b68d7cd28786f6c9a0a3ab9f8b0a0e87cb4387ab0107'  # noqa: E501
 
 
-def add_game(web3, contract, from_address, game_id, price):
-    txhash = contract.functions.addGame(
-        game_id,
-        price,
-    ).transact({'from': from_address})
-    txn_receipt = wait_for_transaction_receipt(
-        web3,
-        txhash,
-        timeout=120,
-        poll_latency=0.1
+def test_pay_success(contract, owner, user):
+    contract.add_game(GAME_ID, PRICE, from_addr=owner)
+
+    initial_jackpot = contract.get_jackpot(GAME_ID)
+    expected_payment_code = PAYMENT_CODE
+    expected_jackpot = initial_jackpot + PRICE
+
+    receipt = contract.pay(GAME_ID, PAYMENT_CODE, value=PRICE, from_addr=user)
+    assert receipt['status'] == 1
+    jackpot = contract.get_jackpot(GAME_ID)
+    payment_code = contract.get_payment_code(GAME_ID, user)
+    assert payment_code == expected_payment_code
+    assert jackpot == expected_jackpot
+
+
+def test_pay_bad_price(contract, owner, user):
+    contract.add_game(GAME_ID, PRICE, from_addr=owner)
+    bad_price = PRICE - 1
+    receipt = contract.pay(
+        GAME_ID,
+        PAYMENT_CODE,
+        value=bad_price,
+        from_addr=user,
     )
-    assert txn_receipt is not None
-    tx = web3.eth.getTransaction(txhash)
-    gas_cost = tx['gasPrice'] * txn_receipt['gasUsed']
-    return gas_cost
+    assert receipt['status'] == 0
 
 
-def pay(web3, contract, user, price, game_id, payment_code):
-    txhash = contract.functions.pay(
-        game_id,
-        payment_code,
-    ).transact({'from': user, 'value': price})
-    txn_receipt = wait_for_transaction_receipt(
-        web3,
-        txhash,
-        timeout=120,
-        poll_latency=0.1
-    )
-    assert txn_receipt is not None
-    tx = web3.eth.getTransaction(txhash)
-    gas_cost = tx['gasPrice'] * txn_receipt['gasUsed']
-    return gas_cost
-
-
-def test_pay_success(web3, contract, user):
-    price = 100000000000000  # 0.0001 ETH
-    game_id = keccak(text='ABC')
-    add_game(web3, contract, user.address, game_id, price)
-
-    payment_code = keccak(text='123')
-    price = contract.functions.getPrice(game_id).call()
-    jackpot = contract.functions.getJackpot(game_id).call()
-    expected_payment_code = payment_code
-    exected_jackpot = jackpot + price
-
-    pay(web3, contract, user.address, price, game_id, payment_code)
-    output_jackpot = contract.functions.getJackpot(game_id).call()
-    output_payment_code = contract.functions.getPaymentCode(
-        game_id,
-        user.address,
-    ).call()
-
-    assert output_payment_code == expected_payment_code
-    assert output_jackpot == exected_jackpot
-
-
-def test_pay_incorrect_price(web3, contract, user):
-    price = 100000000000000  # 0.0001 ETH
-    game_id = keccak(text='ABC')
-    add_game(web3, contract, user.address, game_id, price)
-
-    payment_code = keccak(text='123')
-    price = contract.functions.getPrice(game_id).call() - 1
-    with pytest.raises(TransactionFailed):
-        pay(web3, contract, user.address, price, game_id, payment_code)
-
-
-def test_pay_game_does_not_exist(web3, contract, user):
-    game_id = keccak(text='ABC')
-
-    payment_code = keccak(text='123')
-    price = 0
-    with pytest.raises(TransactionFailed):
-        pay(web3, contract, user.address, price, game_id, payment_code)
+def test_pay_game_does_not_exist(contract, user):
+    price = 0  # Non-existant game has zero price
+    receipt = contract.pay(GAME_ID, PAYMENT_CODE, value=price, from_addr=user)
+    assert receipt['status'] == 0
