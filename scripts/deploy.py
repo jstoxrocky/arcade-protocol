@@ -32,9 +32,10 @@ def run(method, address, game_id):
     filepath = 'bin/combined.json'
     with open(filepath) as f:
         compiled_artifacts = json.load(f)
-    data = compiled_artifacts["contracts"]["solidity/Arcade.sol:Arcade"]
-    abi = data["abi"]
-    bytecode = data["bin"]
+    data = compiled_artifacts["contracts"]
+    contract_data = data["solidity/ArcadeProtocol.sol:ArcadeProtocol"]
+    abi = contract_data["abi"]
+    bytecode = contract_data["bin"]
 
     # Run
     interactor = ContractInteractor(web3)

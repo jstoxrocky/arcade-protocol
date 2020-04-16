@@ -22,7 +22,7 @@ def test_jackpot(contract, owner, user):
         'contract': contract.address,
     }
     vrs = sign_score(owner.key, params)
-    receipt = contract.claim(GAME_ID, SCORE, vrs, from_addr=user)
+    receipt = contract.claim_highscore(GAME_ID, SCORE, vrs, from_addr=user)
     assert receipt['status'] == 1
     jackpot = contract.get_jackpot(GAME_ID)
     assert jackpot == expected_jackpot
@@ -40,7 +40,7 @@ def test_user_balance(web3, contract, owner, user):
         'contract': contract.address,
     }
     vrs = sign_score(owner.key, params)
-    receipt = contract.claim(GAME_ID, SCORE, vrs, from_addr=user)
+    receipt = contract.claim_highscore(GAME_ID, SCORE, vrs, from_addr=user)
     assert receipt['status'] == 1
     gas_cost = receipt['gasPrice'] * receipt['gasUsed']
     balance = web3.eth.getBalance(user.address) + gas_cost  # Adjust for gas
@@ -59,7 +59,7 @@ def test_contract_balance(web3, contract, owner, user):
         'contract': contract.address,
     }
     vrs = sign_score(owner.key, params)
-    receipt = contract.claim(GAME_ID, SCORE, vrs, from_addr=user)
+    receipt = contract.claim_highscore(GAME_ID, SCORE, vrs, from_addr=user)
     assert receipt['status'] == 1
     balance = web3.eth.getBalance(contract.address)
     assert balance == expected_balance
@@ -75,7 +75,7 @@ def test_signer_is_not_owner(contract, owner, user):
         'contract': contract.address,
     }
     vrs = sign_score(user.key, params)
-    receipt = contract.claim(GAME_ID, SCORE, vrs, from_addr=user)
+    receipt = contract.claim_highscore(GAME_ID, SCORE, vrs, from_addr=user)
     assert receipt['status'] == 0
 
 
@@ -89,7 +89,7 @@ def test_user_is_not_signed_user(contract, owner, user, user2):
         'contract': contract.address,
     }
     vrs = sign_score(owner.key, params)
-    receipt = contract.claim(GAME_ID, SCORE, vrs, from_addr=user)
+    receipt = contract.claim_highscore(GAME_ID, SCORE, vrs, from_addr=user)
     assert receipt['status'] == 0
 
 
@@ -104,7 +104,7 @@ def test_uploads_wrong_score(web3, contract, owner, user):
     }
     vrs = sign_score(owner.key, params)
     bad_score = SCORE + 1
-    receipt = contract.claim(GAME_ID, bad_score, vrs, from_addr=user)
+    receipt = contract.claim_highscore(GAME_ID, bad_score, vrs, from_addr=user)
     assert receipt['status'] == 0
 
 
@@ -119,7 +119,7 @@ def test_score_too_low(contract, owner, user):
         'contract': contract.address,
     }
     vrs = sign_score(owner.key, params)
-    receipt = contract.claim(GAME_ID, low_score, vrs, from_addr=user)
+    receipt = contract.claim_highscore(GAME_ID, low_score, vrs, from_addr=user)
     assert receipt['status'] == 0
 
 
@@ -134,7 +134,12 @@ def test_game_id_doesnt_match_arcade_signer(contract, owner, user):
         'contract': contract.address,
     }
     vrs = sign_score(owner.key, params)
-    receipt = contract.claim(wrong_game_id, SCORE, vrs, from_addr=user)
+    receipt = contract.claim_highscore(
+        wrong_game_id,
+        SCORE,
+        vrs,
+        from_addr=user,
+    )
     assert receipt['status'] == 0
 
 
@@ -146,5 +151,5 @@ def test_game_doesnt_exist(contract, owner, user):
         'contract': contract.address,
     }
     vrs = sign_score(owner.key, params)
-    receipt = contract.claim(GAME_ID, SCORE, vrs, from_addr=user)
+    receipt = contract.claim_highscore(GAME_ID, SCORE, vrs, from_addr=user)
     assert receipt['status'] == 0

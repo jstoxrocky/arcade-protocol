@@ -66,8 +66,12 @@ class ContractInteractor():
         receipt = self.send_raw_transaction(function_call, options, from_addr)
         return receipt
 
-    def claim(self, game_id, score, vrs, from_addr):
-        function_call = self.contract.functions.claim(game_id, score, *vrs)
+    def claim_highscore(self, game_id, score, vrs, from_addr):
+        function_call = self.contract.functions.claimHighscore(
+            game_id,
+            score,
+            *vrs,
+        )
         options = self.options(from_addr)
         receipt = self.send_raw_transaction(function_call, options, from_addr)
         return receipt
