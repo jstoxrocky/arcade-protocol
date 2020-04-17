@@ -43,8 +43,9 @@ def run(method, address, game_id):
         interactor.deploy(abi, bytecode, from_addr=owner)
     elif method == 'add_game':
         price = 100000000000000  # 0.0001 ETH
+        fee = 1
         interactor.set_contract(abi, address)
-        interactor.add_game(game_id, price, from_addr=owner)
+        interactor.add_game(game_id, price, fee, from_addr=owner)
 
 
 if __name__ == '__main__':
