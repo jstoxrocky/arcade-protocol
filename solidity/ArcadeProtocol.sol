@@ -8,16 +8,21 @@ import "./SafeMath.sol";
 /// @author Joseph Stockermans (https://github.com/jstoxrocky)
 contract ArcadeProtocol {
     using SafeMath for uint256;
-    mapping (bytes32 => address) internal owners;
+    using SafeMath for uint8;
+
+    mapping (bytes32 => address payable) internal owners;
     mapping (bytes32 => uint256) internal prices;
+    mapping (bytes32 => uint8) internal percentFees;
     mapping (bytes32 => uint256) internal highscores;
     mapping (bytes32 => uint256) internal jackpots;
     mapping (bytes32 => mapping (address => bytes32)) internal paymentCodes;
 
-    function addGame(bytes32 gameId, uint256 price) public {
+    function addGame(bytes32 gameId, uint256 price, uint8 percentFee) public {
         require(owners[gameId] == address(0), "Game ID already claimed");
         require(price > 0, "Game cannot be free to play");
+        require(percentFee >= 0 && percentFee <= 100, "percentFee must be between 0 and 100");
         prices[gameId] = price;
+        percentFees[gameId] = percentFee;
         owners[gameId] = msg.sender;
     }
 
@@ -39,6 +44,10 @@ contract ArcadeProtocol {
 
     function getOwner(bytes32 gameId) public view returns (address) {
         return owners[gameId];
+    }
+
+    function getPercentFee(bytes32 gameId) public view returns (uint8) {
+        return percentFees[gameId];
     }
 
     function pay(bytes32 gameId, bytes32 paymentCode) public payable {
@@ -71,8 +80,10 @@ contract ArcadeProtocol {
 
         // Winner!
         highscores[gameId] = score;
-        uint256 currentJackpot = jackpots[gameId];
+        uint256 fee = percentFees[gameId].mul(jackpots[gameId]).div(100);
+        uint256 jackpot = jackpots[gameId] - fee;
         jackpots[gameId] = 0;
-        msg.sender.transfer(currentJackpot);
+        owners[gameId].transfer(fee);
+        msg.sender.transfer(jackpot);
     }
 }

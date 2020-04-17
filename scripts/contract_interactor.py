@@ -46,6 +46,10 @@ class ContractInteractor():
         owner = self.contract.functions.getOwner(game_id).call()
         return owner
 
+    def get_percent_fee(self, game_id):
+        percent_fee = self.contract.functions.getPercentFee(game_id).call()
+        return percent_fee
+
     def get_payment_code(self, game_id, user):
         bytes_payment_code = self.contract.functions.getPaymentCode(
             game_id,
@@ -54,8 +58,12 @@ class ContractInteractor():
         payment_code = HexBytes(bytes_payment_code).hex()
         return payment_code
 
-    def add_game(self, game_id, price, from_addr):
-        function_call = self.contract.functions.addGame(game_id, price)
+    def add_game(self, game_id, price, percent_fee, from_addr):
+        function_call = self.contract.functions.addGame(
+            game_id,
+            price,
+            percent_fee,
+        )
         options = self.options(from_addr)
         receipt = self.send_raw_transaction(function_call, options, from_addr)
         return receipt
