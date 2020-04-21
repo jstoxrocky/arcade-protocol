@@ -12,7 +12,7 @@ def test_initial_game_price(contract):
 
 def test_initial_payment_code(contract, user):
     expected_payment_code = '0x0000000000000000000000000000000000000000000000000000000000000000'  # noqa: E501
-    payment_code = contract.get_payment_code(GAME_ID, user)
+    payment_code = contract.get_payment_code(GAME_ID, user.address)
     assert payment_code == expected_payment_code
 
 

@@ -6,10 +6,10 @@ from hexbytes import (
 )
 
 
-class ContractInteractor():
+class Contract():
 
-    def __init__(self, web3):
-        self.web3 = web3
+    def __init__(self, provider):
+        self.web3 = Web3(provider)
 
     def options(self, from_addr):
         # eth gas station fast price in gwei 01/10/2020
@@ -53,7 +53,7 @@ class ContractInteractor():
     def get_payment_code(self, game_id, user):
         bytes_payment_code = self.contract.functions.getPaymentCode(
             game_id,
-            user.address,
+            user,
         ).call()
         payment_code = HexBytes(bytes_payment_code).hex()
         return payment_code
@@ -102,3 +102,9 @@ class ContractInteractor():
     @property
     def address(self):
         return self.contract.address
+
+    def confirm_payment(self, game_id, user, payment_code):
+        stored_payment_code = self.get_payment_code(game_id, user)
+        confirmed = stored_payment_code == payment_code
+        error = not confirmed
+        return error

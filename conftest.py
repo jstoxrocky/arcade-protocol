@@ -10,8 +10,8 @@ from web3.providers.eth_tester import (
 from eth_utils import (
     int_to_big_endian,
 )
-from scripts.contract_interactor import (
-    ContractInteractor,
+from arcade_protocol.contract import (
+    Contract,
 )
 
 
@@ -46,15 +46,19 @@ def user2():
 
 
 @pytest.fixture(scope="module")
-def web3(owner):
-    # Web3
+def provider():
     provider = EthereumTesterProvider()
+    return provider
+
+
+@pytest.fixture(scope="module")
+def web3(provider):
     web3 = Web3(provider)
     return web3
 
 
 @pytest.fixture(scope="function")
-def contract(web3, owner):
+def contract(provider, owner):
     # ABI
     filepath = 'bin/combined.json'
     with open(filepath) as f:
@@ -64,8 +68,21 @@ def contract(web3, owner):
     abi = contract_data["abi"]
     bytecode = contract_data["bin"]
 
-    interactor = ContractInteractor(web3)
+    interactor = Contract(provider)
     receipt = interactor.deploy(abi, bytecode, from_addr=owner)
     address = receipt['contractAddress']
     interactor.set_contract(abi, address)
     return interactor
+
+
+class Game():
+
+    id = '0x240e634ba82fa510c7e25243cc95d456bb1b6c11ef8c695ddd555eb5cd443f74'
+
+    def __init__(self):
+        pass
+
+
+@pytest.fixture(scope="function")
+def game():
+    return Game()
