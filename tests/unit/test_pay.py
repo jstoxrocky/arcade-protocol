@@ -14,7 +14,7 @@ def test_pay_success(contract, owner, user):
     receipt = contract.pay(GAME_ID, PAYMENT_CODE, value=PRICE, from_addr=user)
     assert receipt['status'] == 1
     jackpot = contract.get_jackpot(GAME_ID)
-    payment_code = contract.get_payment_code(GAME_ID, user)
+    payment_code = contract.get_payment_code(GAME_ID, user.address)
     assert payment_code == expected_payment_code
     assert jackpot == expected_jackpot
 
