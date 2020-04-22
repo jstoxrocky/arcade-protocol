@@ -4,12 +4,12 @@ from arcade_protocol.crypto import (
 )
 
 
-class Arcade():
+class GameInterface():
 
-    def __init__(self, contract, game, player):
+    def __init__(self, contract, game_id, player):
         self.contract = contract
         self.player = player
-        self.game = game
+        self.game_id = game_id
 
     @staticmethod
     def new_payment_code():
@@ -17,18 +17,19 @@ class Arcade():
         return payment_code
 
     def confirm_payment(self, payment_code):
-        error = self.contract.confirm_payment(
-            self.game.id,
+        stored_payment_code = self.contract.get_payment_code(
+            self.game_id,
             self.player,
-            payment_code,
         )
+        confirmed = stored_payment_code == payment_code
+        error = not confirmed
         return error
 
     def sign(self, key, score):
         vrs = sign_score(
             key,
             self.contract.address,
-            self.game.id,
+            self.game_id,
             self.player,
             score,
         )
