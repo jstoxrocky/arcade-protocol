@@ -11,6 +11,7 @@ from eth_utils import (
     int_to_big_endian,
 )
 from arcade_protocol.contract import (
+    Deployer,
     Contract,
 )
 
@@ -68,21 +69,8 @@ def contract(provider, owner):
     abi = contract_data["abi"]
     bytecode = contract_data["bin"]
 
-    interactor = Contract(provider)
-    receipt = interactor.deploy(abi, bytecode, from_addr=owner)
+    deployer = Deployer(provider)
+    receipt = deployer.deploy(abi, bytecode, from_addr=owner)
     address = receipt['contractAddress']
-    interactor.set_contract(abi, address)
-    return interactor
-
-
-class Game():
-
-    id = '0x240e634ba82fa510c7e25243cc95d456bb1b6c11ef8c695ddd555eb5cd443f74'
-
-    def __init__(self):
-        pass
-
-
-@pytest.fixture(scope="function")
-def game():
-    return Game()
+    contract = Contract(provider, address, abi)
+    return contract

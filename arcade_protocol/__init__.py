@@ -1,3 +1,6 @@
-from .arcade import (  # noqa: F401
-  Arcade,
+from .game_interface import (  # noqa: F401
+  GameInterface,
+)
+from .contract import (  # noqa: F401
+  Contract,
 )

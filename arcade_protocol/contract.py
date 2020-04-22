@@ -6,7 +6,7 @@ from hexbytes import (
 )
 
 
-class Contract():
+class Base():
 
     def __init__(self, provider):
         self.web3 = Web3(provider)
@@ -23,12 +23,41 @@ class Contract():
         }
         return options
 
+    def send_raw_transaction(self, function_call, options, from_addr):
+        unsigned_tx = function_call.buildTransaction(options)
+        signed_tx = self.web3.eth.account.sign_transaction(
+            unsigned_tx,
+            from_addr.key,
+        )
+        tx_hash = self.web3.eth.sendRawTransaction(signed_tx.rawTransaction)
+        print('transaction hash:', tx_hash.hex())
+        receipt = self.web3.eth.waitForTransactionReceipt(tx_hash)
+        transaction = self.web3.eth.getTransaction(tx_hash)
+        return {**receipt, 'gasPrice': transaction['gasPrice']}
+
+
+class Deployer(Base):
+
+    def __init__(self, provider):
+        super().__init__(provider)
+
     def deploy(self, abi, bytecode, from_addr):
         contract = self.web3.eth.contract(abi=abi, bytecode=bytecode)
         function_call = contract.constructor()
         options = self.options(from_addr)
         receipt = self.send_raw_transaction(function_call, options, from_addr)
         return receipt
+
+
+class Contract(Base):
+
+    def __init__(self, provider, address, abi):
+        super().__init__(provider)
+        self.contract = self.web3.eth.contract(address, abi=abi)
+        self.address = address
+
+    def set_contract(self, abi, address):
+        self.contract = self.web3.eth.contract(abi=abi, address=address)
 
     def get_price(self, game_id):
         price = self.contract.functions.getPrice(game_id).call()
@@ -83,28 +112,3 @@ class Contract():
         options = self.options(from_addr)
         receipt = self.send_raw_transaction(function_call, options, from_addr)
         return receipt
-
-    def set_contract(self, abi, address):
-        self.contract = self.web3.eth.contract(abi=abi, address=address)
-
-    def send_raw_transaction(self, function_call, options, from_addr):
-        unsigned_tx = function_call.buildTransaction(options)
-        signed_tx = self.web3.eth.account.sign_transaction(
-            unsigned_tx,
-            from_addr.key,
-        )
-        tx_hash = self.web3.eth.sendRawTransaction(signed_tx.rawTransaction)
-        print('transaction hash:', tx_hash.hex())
-        receipt = self.web3.eth.waitForTransactionReceipt(tx_hash)
-        transaction = self.web3.eth.getTransaction(tx_hash)
-        return {**receipt, 'gasPrice': transaction['gasPrice']}
-
-    @property
-    def address(self):
-        return self.contract.address
-
-    def confirm_payment(self, game_id, user, payment_code):
-        stored_payment_code = self.get_payment_code(game_id, user)
-        confirmed = stored_payment_code == payment_code
-        error = not confirmed
-        return error
