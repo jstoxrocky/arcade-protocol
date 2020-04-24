@@ -23,11 +23,11 @@ def sign_score(key, validator, game_id, user, score):
         primitive=encoded_values,
     )
     signed = Account.sign_message(message, key)
-    vrs = (
-        signed['v'],
-        HexBytes(signed['r']).hex(),
-        HexBytes(signed['s']).hex(),
-    )
+    vrs = {
+        'v': signed['v'],
+        'r': HexBytes(signed['r']).hex(),
+        's': HexBytes(signed['s']).hex(),
+    }
     return vrs
 
 
