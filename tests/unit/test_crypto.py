@@ -23,7 +23,7 @@ SCORE = 1
 
 def test_sign_score(user, owner, monkeypatch):
     expected_signer = owner.address
-    vrs = sign_score(owner.key, CONTRACT, GAME_ID, user.address, SCORE)
+    sig = sign_score(owner.key, CONTRACT, GAME_ID, user.address, SCORE)
     types = ['bytes32', 'address', 'uint256']
     values = [
         HexBytes(GAME_ID),
@@ -35,6 +35,7 @@ def test_sign_score(user, owner, monkeypatch):
         validator_address=CONTRACT,
         primitive=encoded_values,
     )
+    vrs = (sig['v'], sig['r'], sig['s'])
     actual_signer = Account.recover_message(
         message,
         vrs=vrs,
