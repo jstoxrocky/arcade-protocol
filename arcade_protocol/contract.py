@@ -51,45 +51,45 @@ class Deployer(Base):
 
 class Contract(Base):
 
-    def __init__(self, provider, address, abi):
+    def __init__(self, provider, address, abi, game_id):
         super().__init__(provider)
         self.contract = self.web3.eth.contract(address, abi=abi)
         self.address = address
+        self.game_id = game_id
 
-    def set_contract(self, abi, address):
-        self.contract = self.web3.eth.contract(abi=abi, address=address)
-
-    def get_price(self, game_id):
-        price = self.contract.functions.getPrice(game_id).call()
+    def get_price(self):
+        price = self.contract.functions.getPrice(self.game_id).call()
         return price
 
-    def get_highscore(self, game_id):
-        highscore = self.contract.functions.getHighscore(game_id).call()
+    def get_highscore(self):
+        highscore = self.contract.functions.getHighscore(self.game_id).call()
         return highscore
 
-    def get_jackpot(self, game_id):
-        jackpot = self.contract.functions.getJackpot(game_id).call()
+    def get_jackpot(self):
+        jackpot = self.contract.functions.getJackpot(self.game_id).call()
         return jackpot
 
-    def get_owner(self, game_id):
-        owner = self.contract.functions.getOwner(game_id).call()
+    def get_owner(self):
+        owner = self.contract.functions.getOwner(self.game_id).call()
         return owner
 
-    def get_percent_fee(self, game_id):
-        percent_fee = self.contract.functions.getPercentFee(game_id).call()
+    def get_percent_fee(self):
+        percent_fee = self.contract.functions.getPercentFee(
+            self.game_id,
+        ).call()
         return percent_fee
 
-    def get_payment_code(self, game_id, user):
+    def get_payment_code(self, user):
         bytes_payment_code = self.contract.functions.getPaymentCode(
-            game_id,
+            self.game_id,
             user,
         ).call()
         payment_code = HexBytes(bytes_payment_code).hex()
         return payment_code
 
-    def add_game(self, game_id, price, percent_fee, from_addr):
+    def add_game(self, price, percent_fee, from_addr):
         function_call = self.contract.functions.addGame(
-            game_id,
+            self.game_id,
             price,
             percent_fee,
         )
@@ -97,15 +97,15 @@ class Contract(Base):
         receipt = self.send_raw_transaction(function_call, options, from_addr)
         return receipt
 
-    def pay(self, game_id, payment_code, value, from_addr):
-        function_call = self.contract.functions.pay(game_id, payment_code)
+    def pay(self, payment_code, value, from_addr):
+        function_call = self.contract.functions.pay(self.game_id, payment_code)
         options = {**self.options(from_addr), 'value': value}
         receipt = self.send_raw_transaction(function_call, options, from_addr)
         return receipt
 
-    def claim_highscore(self, game_id, score, vrs, from_addr):
+    def claim_highscore(self, score, vrs, from_addr):
         function_call = self.contract.functions.claimHighscore(
-            game_id,
+            self.game_id,
             score,
             *vrs,
         )

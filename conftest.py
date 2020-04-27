@@ -72,5 +72,6 @@ def contract(provider, owner):
     deployer = Deployer(provider)
     receipt = deployer.deploy(abi, bytecode, from_addr=owner)
     address = receipt['contractAddress']
-    contract = Contract(provider, address, abi)
+    game_id = '0x240e634ba82fa510c7e25243cc95d456bb1b6c11ef8c695ddd555eb5cd443f74'  # noqa: E501
+    contract = Contract(provider, address, abi, game_id)
     return contract

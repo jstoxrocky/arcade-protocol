@@ -9,7 +9,6 @@ from hexbytes import (
 )
 
 
-GAME_ID = '0x240e634ba82fa510c7e25243cc95d456bb1b6c11ef8c695ddd555eb5cd443f74'
 CONTRACT = '0x2c35B443d3a15588c4dfCE0da2C8Af0264ed22bb'
 PERCENT_FEE = 10
 PAYMENT_CODE = '0x64e604787cbf194841e7b68d7cd28786f6c9a0a3ab9f8b0a0e87cb4387ab0107'  # noqa: E501
@@ -28,9 +27,9 @@ def test_new_payment_code(mocker):
 
 
 def test_confirm_payment_success(contract, user, owner):
-    contract.add_game(GAME_ID, PRICE, PERCENT_FEE, from_addr=owner)
-    contract.pay(GAME_ID, PAYMENT_CODE, value=PRICE, from_addr=user)
-    arcade = GameInterface(contract, GAME_ID, player=user.address)
+    contract.add_game(PRICE, PERCENT_FEE, from_addr=owner)
+    contract.pay(PAYMENT_CODE, value=PRICE, from_addr=user)
+    arcade = GameInterface(contract, player=user.address)
     error = arcade.confirm_payment(
         PAYMENT_CODE,
     )
@@ -42,10 +41,10 @@ def test_confirm_payment_user_hasnt_uploaded_payment_code(
     user,
     owner,
 ):
-    contract.add_game(GAME_ID, PRICE, PERCENT_FEE, from_addr=owner)
+    contract.add_game(PRICE, PERCENT_FEE, from_addr=owner)
     old_payment_code = HexBytes(keccak(text='XYZ')).hex()
-    contract.pay(GAME_ID, old_payment_code, value=PRICE, from_addr=user)
-    arcade = GameInterface(contract, GAME_ID, player=user.address)
+    contract.pay(old_payment_code, value=PRICE, from_addr=user)
+    arcade = GameInterface(contract, player=user.address)
     error = arcade.confirm_payment(
         PAYMENT_CODE,
     )
